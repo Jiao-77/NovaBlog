@@ -296,6 +296,61 @@ import TypewriterText from '../components/react/TypewriterText';
 - `loop`：是否循环播放（可选，默认为 false）
 - `style`：自定义样式（可选）
 
+#### MathFlipCard 数学公式翻转卡片
+
+一个专门用于展示 LaTeX 数学公式的翻转卡片组件。正面显示渲染后的公式，背面显示 LaTeX 源码。
+
+```mdx
+import MathFlipCard from '../components/react/MathFlipCard';
+
+<MathFlipCard 
+  latex="E = mc^2" 
+  client:visible
+/>
+```
+
+**属性说明**：
+- `latex`：LaTeX 公式字符串
+- `displayMode`：是否为块级公式（可选，默认为 true）
+- `className`：自定义 CSS 类名（可选）
+
+**示例**：
+
+```mdx
+---
+title: 数学公式展示
+description: 使用翻转卡片展示数学公式
+pubDate: 2024-01-20
+tags: [数学, LaTeX]
+---
+
+import MathFlipCard from '../components/react/MathFlipCard';
+
+# 数学公式展示
+
+## 质能方程
+
+<MathFlipCard latex="E = mc^2" client:load />
+
+## 麦克斯韦方程组
+
+<MathFlipCard latex="\nabla \cdot \mathbf{E} = \frac{\rho}{\varepsilon_0}" client:load />
+
+## 薛定谔方程
+
+<MathFlipCard latex="i\hbar\frac{\partial}{\partial t}\Psi(\mathbf{r},t) = \left[-\frac{\hbar^2}{2m}\nabla^2 + V(\mathbf{r},t)\right]\Psi(\mathbf{r},t)" client:load />
+
+## 矩阵运算
+
+<MathFlipCard latex="\begin{pmatrix} a & b \\ c & d \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} ax + by \\ cx + dy \end{pmatrix}" client:load />
+```
+
+**特点**：
+- 点击"显示 LaTeX"按钮可查看公式源码
+- 点击"显示公式"按钮返回渲染结果
+- 支持 KaTeX 的所有语法
+- 适合教学和技术文档
+
 ### 在文章中使用
 
 在 MDX 文章中导入并使用这些组件：

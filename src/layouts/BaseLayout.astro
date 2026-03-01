@@ -57,6 +57,13 @@ const socialImageURL = image.startsWith('http') ? image : new URL(image, site).h
       rel="stylesheet"
     />
 
+    <!-- KaTeX CSS for LaTeX Math Rendering -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.33/dist/katex.min.css"
+      crossorigin="anonymous"
+    />
+
     <!-- Dark Mode Script (防止闪烁) -->
     <script is:inline>
       const theme = (() => {

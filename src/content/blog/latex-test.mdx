@@ -1,0 +1,116 @@
+---
+title: 'LaTeX 公式渲染测试'
+description: '测试 LaTeX 数学公式渲染功能'
+pubDate: 2026-03-01
+author: 'NovaBlog Team'
+category: '测试'
+tags: ['测试', 'LaTeX', '数学']
+---
+
+import MathFlipCard from '../../components/react/MathFlipCard';
+
+# LaTeX 公式渲染测试
+
+## 行内公式
+
+这是一个行内公式：$E = mc^2$，爱因斯坦的质能方程。
+
+勾股定理：$a^2 + b^2 = c^2$
+
+## 块级公式
+
+高斯积分：
+
+$$
+\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+$$
+
+## 翻转卡片公式展示
+
+下面使用翻转卡片展示公式，点击"显示 LaTeX"按钮可以查看源码：
+
+### 质能方程
+
+<MathFlipCard latex="E = mc^2" client:load />
+
+### 麦克斯韦方程组
+
+<MathFlipCard latex="\nabla \cdot \mathbf{E} = \frac{\rho}{\varepsilon_0}" client:load />
+
+### 薛定谔方程
+
+<MathFlipCard latex="i\hbar\frac{\partial}{\partial t}\Psi(\mathbf{r},t) = \left[-\frac{\hbar^2}{2m}\nabla^2 + V(\mathbf{r},t)\right]\Psi(\mathbf{r},t)" client:load />
+
+### 傅里叶变换
+
+<MathFlipCard latex="\hat{f}(\xi) = \int_{-\infty}^{\infty} f(x) e^{-2\pi i x \xi} dx" client:load />
+
+### 矩阵运算
+
+<MathFlipCard latex="\begin{pmatrix} a & b \\ c & d \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} ax + by \\ cx + dy \end{pmatrix}" client:load />
+
+## 传统公式展示（对比）
+
+麦克斯韦方程组：
+
+$$
+\nabla \cdot \mathbf{E} = \frac{\rho}{\varepsilon_0}
+$$
+
+$$
+\nabla \cdot \mathbf{B} = 0
+$$
+
+$$
+\nabla \times \mathbf{E} = -\frac{\partial \mathbf{B}}{\partial t}
+$$
+
+$$
+\nabla \times \mathbf{B} = \mu_0 \mathbf{J} + \mu_0 \varepsilon_0 \frac{\partial \mathbf{E}}{\partial t}
+$$
+
+## 复杂公式
+
+薛定谔方程：
+
+$$
+i\hbar\frac{\partial}{\partial t}\Psi(\mathbf{r},t) = \left[-\frac{\hbar^2}{2m}\nabla^2 + V(\mathbf{r},t)\right]\Psi(\mathbf{r},t)
+$$
+
+傅里叶变换：
+
+$$
+\hat{f}(\xi) = \int_{-\infty}^{\infty} f(x) e^{-2\pi i x \xi} dx
+$$
+
+矩阵：
+
+$$
+\begin{pmatrix}
+a & b \\
+c & d
+\end{pmatrix}
+\begin{pmatrix}
+x \\
+y
+\end{pmatrix}
+=
+\begin{pmatrix}
+ax + by \\
+cx + dy
+\end{pmatrix}
+$$
+
+求和与积分：
+
+$$
+\sum_{i=1}^{n} i = \frac{n(n+1)}{2}
+$$
+
+$$
+\prod_{i=1}^{n} i = n!
+$$
+
+## 测试完成
+
+如果你能看到以上公式正确渲染，说明 LaTeX 公式支持已经成功配置！

@@ -4,6 +4,8 @@ import mdx from '@astrojs/mdx';
 import vue from '@astrojs/vue';
 import tailwind from '@astrojs/tailwind';
 import react from '@astrojs/react';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 // https://astro.build/config
 export default defineConfig({
@@ -24,6 +26,8 @@ export default defineConfig({
       theme: 'github-dark',
       wrap: true,
     },
+    remarkPlugins: [remarkMath],
+    rehypePlugins: [rehypeKatex],
   },
   vite: {
     ssr: {
