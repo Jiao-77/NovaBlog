@@ -153,9 +153,9 @@ const tocItems = headings.filter(h => h.depth >= 2 && h.depth <= 3);
 
     <!-- 文章内容区域 -->
     <div class="content-width">
-      <div class="flex gap-8 relative">
+      <div class="flex gap-8 relative justify-center">
         <!-- 文章主体 -->
-        <div class={`flex-1 min-w-0 ${hasToc ? 'max-w-3xl' : 'max-w-4xl mx-auto'}`}>
+        <div class="flex-1 min-w-0 max-w-3xl">
           <div class="prose-container prose-headings:font-semibold prose-headings:tracking-tight prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary-500 prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-code:text-primary-400">
             <slot />
           </div>
@@ -163,7 +163,7 @@ const tocItems = headings.filter(h => h.depth >= 2 && h.depth <= 3);
         
         <!-- 桌面端右侧目录 -->
         {hasToc && (
-          <aside class="hidden xl:block w-48 flex-shrink-0">
+          <aside class="hidden xl:block w-56 flex-shrink-0">
             <nav class="sticky top-24" aria-label="文章目录">
               <div class="text-sm font-semibold text-foreground mb-3">目录</div>
               <ul class="toc-list-desktop">
