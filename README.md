@@ -171,6 +171,11 @@ heroImage: /images/hero.jpg
 - [Docker](https://www.docker.com/) - 容器化
 - [Nginx](https://nginx.org/) - 反向代理
 
+## 📚 文档
+
+- **[使用指南](./docs/user-guide.md)** - 博客使用教程，包括文章编写、MDX 组件、Typst 排版、主题定制等
+- **[开发文档](./docs/developer-guide.md)** - 面向开发者的技术文档，包括 API 接口、数据库结构、深度定制指南等
+
 ## 📜 License
 
 MIT License © 2024
