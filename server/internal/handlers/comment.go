@@ -28,11 +28,18 @@ type CreateCommentRequest struct {
 
 // CreateComment 创建评论
 func (h *CommentHandler) CreateComment(c *gin.Context) {
-	userID, _ := middleware.GetUserID(c)
-
 	var req CreateCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 尝试从上下文获取用户 ID（如果有认证中间件）
+	userID, isLoggedIn := middleware.GetUserID(c)
+	
+	// 如果没有登录，返回错误（评论需要登录）
+	if !isLoggedIn || userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "请登录后再评论"})
 		return
 	}
 
@@ -82,14 +89,35 @@ func (h *CommentHandler) GetComments(c *gin.Context) {
 
 	query.Count(&total)
 
-	if err := query.Preload("User").
+	// 使用 Joins 显式加载用户信息，确保数据完整
+	if err := query.
+		Joins("LEFT JOIN users ON users.id = comments.user_id").
 		Preload("Replies.User").
-		Order("created_at DESC").
+		Order("comments.created_at DESC").
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).
 		Find(&comments).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get comments"})
 		return
+	}
+
+	// 手动加载每个评论的用户信息（确保 Preload 正确工作）
+	for i := range comments {
+		if comments[i].UserID > 0 {
+			var user models.User
+			if err := database.DB.First(&user, comments[i].UserID).Error; err == nil {
+				comments[i].User = user
+			}
+		}
+		// 加载回复的用户信息
+		for j := range comments[i].Replies {
+			if comments[i].Replies[j].UserID > 0 {
+				var replyUser models.User
+				if err := database.DB.First(&replyUser, comments[i].Replies[j].UserID).Error; err == nil {
+					comments[i].Replies[j].User = replyUser
+				}
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{

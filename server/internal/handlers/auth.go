@@ -136,6 +136,45 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 }
 
+// GetCurrentUser 获取当前用户信息（通过 Authorization header）
+func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
+	// 从 header 获取 token
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "no token provided"})
+		return
+	}
+
+	// 解析 Bearer token
+	tokenString := ""
+	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+		tokenString = authHeader[7:]
+	} else {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token format"})
+		return
+	}
+
+	// 验证 token
+	claims, err := h.jwtManager.ParseToken(tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+		return
+	}
+
+	// 获取用户信息
+	var user models.User
+	if err := database.DB.First(&user, claims.UserID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"user": user})
+}
+
 // GetProfile 获取当前用户信息
 func (h *AuthHandler) GetProfile(c *gin.Context) {
 	userID, _ := middleware.GetUserID(c)

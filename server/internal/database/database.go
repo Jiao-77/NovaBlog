@@ -7,6 +7,7 @@ import (
 
 	"github.com/novablog/server/internal/config"
 	"github.com/novablog/server/internal/models"
+	"github.com/novablog/server/internal/utils"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -37,6 +38,11 @@ func Initialize(cfg *config.Config) error {
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}
 
+	// 创建默认管理员用户
+	if err := createDefaultAdmin(); err != nil {
+		return fmt.Errorf("failed to create default admin: %w", err)
+	}
+
 	return nil
 }
 
@@ -58,4 +64,35 @@ func Close() error {
 		return err
 	}
 	return sqlDB.Close()
+}
+
+// createDefaultAdmin 创建默认管理员用户
+func createDefaultAdmin() error {
+	// 检查是否已存在 admin 用户
+	var count int64
+	DB.Model(&models.User{}).Where("username = ?", "admin").Count(&count)
+	if count > 0 {
+		return nil // 已存在，跳过
+	}
+
+	// 创建 admin 用户
+	hashedPassword, err := utils.HashPassword("admin")
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	admin := models.User{
+		Username: "admin",
+		Email:    "admin@novablog.local",
+		Password: hashedPassword,
+		Role:     "admin",
+		Nickname: "Administrator",
+	}
+
+	if err := DB.Create(&admin).Error; err != nil {
+		return fmt.Errorf("failed to create admin user: %w", err)
+	}
+
+	fmt.Println("✅ Default admin user created: admin / admin")
+	return nil
 }

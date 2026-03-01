@@ -17,26 +17,72 @@ allPosts.forEach((post) => {
 
 // 按文章数量排序
 const sortedTags = [...tagMap.entries()].sort((a, b) => b[1] - a[1]);
+
+// 计算字体大小（基于文章数量）
+const maxCount = Math.max(...tagMap.values(), 1);
+const minCount = Math.min(...tagMap.values(), 1);
+
+function getFontSize(count: number): string {
+  // 字体大小范围：0.875rem 到 2.5rem
+  const minSize = 0.875;
+  const maxSize = 2.5;
+  
+  if (maxCount === minCount) {
+    return `${(minSize + maxSize) / 2}rem`;
+  }
+  
+  const scale = (count - minCount) / (maxCount - minCount);
+  const size = minSize + scale * (maxSize - minSize);
+  return `${size}rem`;
+}
+
+function getOpacity(count: number): number {
+  // 透明度范围：0.6 到 1
+  if (maxCount === minCount) return 0.8;
+  const scale = (count - minCount) / (maxCount - minCount);
+  return 0.6 + scale * 0.4;
+}
+
+// 随机颜色类
+const colorClasses = [
+  'text-primary-500',
+  'text-blue-500',
+  'text-purple-500',
+  'text-pink-500',
+  'text-indigo-500',
+  'text-cyan-500',
+  'text-teal-500',
+  'text-emerald-500',
+];
+
+function getRandomColor(index: number): string {
+  return colorClasses[index % colorClasses.length];
+}
 ---
 
-<BaseLayout title="标签 - NovaBlog">
+<BaseLayout title="标签云 - NovaBlog">
   <div class="py-12">
     <div class="content-width">
       <div class="text-center mb-12">
-        <h1 class="text-3xl md:text-4xl font-bold mb-4">标签</h1>
-        <p class="text-foreground/60">按标签浏览文章</p>
+        <h1 class="text-3xl md:text-4xl font-bold mb-4">标签云</h1>
+        <p class="text-foreground/60">
+          共 {sortedTags.length} 个标签，{allPosts.length} 篇文章
+        </p>
       </div>
 
       {sortedTags.length > 0 ? (
-        <div class="max-w-2xl mx-auto">
-          <div class="flex flex-wrap justify-center gap-4">
-            {sortedTags.map(([tag, count]) => (
+        <div class="tag-cloud">
+          <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-6 max-w-4xl mx-auto px-4">
+            {sortedTags.map(([tag, count], index) => (
               <a
                 href={`/tags/${tag}`}
-                class="card px-6 py-4 flex items-center gap-3 hover:border-primary-500 transition-colors"
+                class="tag-item hover:scale-110 transition-transform duration-300"
+                style={`font-size: ${getFontSize(count)}; opacity: ${getOpacity(count)}`}
               >
-                <span class="text-lg font-medium">#{tag}</span>
-                <span class="text-sm text-foreground/40">{count} 篇文章</span>
+                <span class={`font-medium ${getRandomColor(index)}`}>
+                  #{tag}
+                </span>
+                <span class="text-xs text-foreground/40 ml-1">({count})</span>
               </a>
             ))}
           </div>
@@ -49,6 +95,37 @@ const sortedTags = [...tagMap.entries()].sort((a, b) => b[1] - a[1]);
           <p>暂无标签</p>
         </div>
       )}
+
+      <!-- 图例说明 -->
+      <div class="mt-16 text-center">
+        <div class="inline-flex items-center gap-6 text-sm text-foreground/40">
+          <span>字体大小 = 文章数量</span>
+          <span>|</span>
+          <span>点击标签查看相关文章</span>
+        </div>
+      </div>
     </div>
   </div>
 </BaseLayout>
+
+<style>
+  .tag-cloud {
+    min-height: 300px;
+    background: linear-gradient(135deg, transparent 0%, var(--muted) 100%);
+    border-radius: 16px;
+    padding: 3rem 1rem;
+  }
+
+  .tag-item {
+    display: inline-flex;
+    align-items: baseline;
+    text-decoration: none;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .tag-item:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+</style>
