@@ -45,7 +45,7 @@
           <div class="flex-shrink-0">
             <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
               <span class="text-primary-600 dark:text-primary-400 font-medium">
-                {{ (comment.user.nickname || comment.user.username)[0].toUpperCase() }}
+                {{ getInitial(comment.user) }}
               </span>
             </div>
           </div>
@@ -53,10 +53,10 @@
           <!-- 内容 -->
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-1">
-              <span class="font-medium">{{ comment.user.nickname || comment.user.username }}</span>
+              <span class="font-medium">{{ getDisplayName(comment.user) }}</span>
               <span class="text-xs text-foreground/40">{{ formatDate(comment.created_at) }}</span>
             </div>
-            <p class="text-foreground/80 whitespace-pre-wrap">{{ comment.content }}</p>
+            <div class="comment-content prose prose-sm dark:prose-invert max-w-none" v-html="renderMarkdown(comment.content)"></div>
             
             <!-- 回复按钮 -->
             <button
@@ -94,16 +94,16 @@
             <div class="flex-shrink-0">
               <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
                 <span class="text-primary-600 dark:text-primary-400 text-sm font-medium">
-                  {{ (reply.user.nickname || reply.user.username)[0].toUpperCase() }}
+                  {{ getInitial(reply.user) }}
                 </span>
               </div>
             </div>
             <div class="flex-1">
               <div class="flex items-center gap-2 mb-1">
-                <span class="font-medium text-sm">{{ reply.user.nickname || reply.user.username }}</span>
+                <span class="font-medium text-sm">{{ getDisplayName(reply.user) }}</span>
                 <span class="text-xs text-foreground/40">{{ formatDate(reply.created_at) }}</span>
               </div>
-              <p class="text-foreground/80 text-sm">{{ reply.content }}</p>
+              <div class="comment-content prose prose-sm dark:prose-invert max-w-none text-sm" v-html="renderMarkdown(reply.content)"></div>
             </div>
           </div>
         </div>
@@ -135,6 +135,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { marked } from 'marked';
+
+// 配置 marked 选项 - 安全模式，禁止 HTML 标签
+marked.setOptions({
+  breaks: true, // 支持 GFM 换行
+  gfm: true, // GitHub Flavored Markdown
+});
 
 const props = defineProps<{
   postId: string;
@@ -179,11 +186,12 @@ async function loadComments() {
     );
     const data = await response.json();
     if (response.ok) {
-      comments.value = data.data;
-      pagination.value = data.pagination;
+      comments.value = Array.isArray(data.data) ? data.data : [];
+      pagination.value = data.pagination || { page: 1, pageSize: 20, total: 0, totalPage: 0 };
     }
   } catch (error) {
     console.error('Failed to load comments:', error);
+    comments.value = [];
   } finally {
     loading.value = false;
   }
@@ -263,6 +271,19 @@ function loadPage(page: number) {
   loadComments();
 }
 
+// 获取用户首字母
+function getInitial(user: any): string {
+  if (!user) return '?';
+  const name = user.nickname || user.username || '匿名';
+  return name[0].toUpperCase();
+}
+
+// 获取用户显示名称
+function getDisplayName(user: any): string {
+  if (!user) return '匿名用户';
+  return user.nickname || user.username || '匿名用户';
+}
+
 // 格式化日期
 function formatDate(dateString: string) {
   const date = new Date(dateString);
@@ -285,6 +306,18 @@ function formatDate(dateString: string) {
   });
 }
 
+// 渲染 Markdown 内容（安全模式）
+function renderMarkdown(content: string): string {
+  if (!content) return '';
+  try {
+    // 使用 marked 解析 Markdown，返回 HTML 字符串
+    return marked.parse(content) as string;
+  } catch (error) {
+    console.error('Failed to parse markdown:', error);
+    return content;
+  }
+}
+
 onMounted(() => {
   loadComments();
 });
@@ -293,5 +326,103 @@ onMounted(() => {
 <style scoped>
 .comment-section {
   @apply mt-12 pt-8 border-t border-border;
+}
+
+/* 评论内容 Markdown 样式 */
+.comment-content :deep(p) {
+  @apply my-2 leading-relaxed text-gray-700 dark:text-gray-300;
+}
+
+.comment-content :deep(p:first-child) {
+  @apply mt-0;
+}
+
+.comment-content :deep(p:last-child) {
+  @apply mb-0;
+}
+
+.comment-content :deep(a) {
+  @apply text-primary-500 hover:underline;
+}
+
+.comment-content :deep(strong) {
+  @apply font-bold text-gray-900 dark:text-gray-100;
+}
+
+.comment-content :deep(em) {
+  @apply italic;
+}
+
+.comment-content :deep(code) {
+  @apply bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono text-primary-600 dark:text-primary-400;
+}
+
+.comment-content :deep(pre) {
+  @apply bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto my-3;
+}
+
+.comment-content :deep(pre code) {
+  @apply bg-transparent p-0 text-sm;
+}
+
+.comment-content :deep(blockquote) {
+  @apply border-l-4 border-primary-500 pl-4 my-3 italic text-gray-500 dark:text-gray-400;
+}
+
+.comment-content :deep(ul),
+.comment-content :deep(ol) {
+  @apply my-2 pl-6;
+}
+
+.comment-content :deep(ul) {
+  @apply list-disc;
+}
+
+.comment-content :deep(ol) {
+  @apply list-decimal;
+}
+
+.comment-content :deep(li) {
+  @apply my-1 text-gray-700 dark:text-gray-300;
+}
+
+.comment-content :deep(h1),
+.comment-content :deep(h2),
+.comment-content :deep(h3),
+.comment-content :deep(h4) {
+  @apply font-bold text-gray-900 dark:text-gray-100 mt-4 mb-2;
+}
+
+.comment-content :deep(h1) {
+  @apply text-xl;
+}
+
+.comment-content :deep(h2) {
+  @apply text-lg;
+}
+
+.comment-content :deep(h3) {
+  @apply text-base;
+}
+
+.comment-content :deep(hr) {
+  @apply border-gray-200 dark:border-gray-700 my-4;
+}
+
+.comment-content :deep(img) {
+  @apply max-w-full rounded-lg my-2;
+}
+
+.comment-content :deep(table) {
+  @apply w-full border-collapse my-4;
+}
+
+.comment-content :deep(th),
+.comment-content :deep(td) {
+  @apply border border-gray-200 dark:border-gray-700 px-3 py-2 text-left;
+}
+
+.comment-content :deep(th) {
+  @apply bg-gray-100 dark:bg-gray-800 font-bold;
 }
 </style>

@@ -1,0 +1,265 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+// 获取所有文章
+const allPosts = await getCollection('blog', ({ data }) => {
+  return !data.draft;
+});
+
+// 构建分类树结构
+interface CategoryNode {
+  name: string;
+  fullName: string;
+  count: number;
+  children: Map<string, CategoryNode>;
+  posts: typeof allPosts;
+}
+
+function buildCategoryTree(posts: typeof allPosts): CategoryNode {
+  const root: CategoryNode = {
+    name: 'root',
+    fullName: '',
+    count: 0,
+    children: new Map(),
+    posts: [],
+  };
+
+  posts.forEach((post) => {
+    const category = post.data.category;
+    if (!category) {
+      root.posts.push(post);
+      root.count++;
+      return;
+    }
+
+    // 支持多级分类，用 / 分隔，如 "技术/前端/React"
+    const parts = category.split('/').map((p) => p.trim());
+    let current = root;
+
+    parts.forEach((part, index) => {
+      const fullName = parts.slice(0, index + 1).join('/');
+      if (!current.children.has(part)) {
+        current.children.set(part, {
+          name: part,
+          fullName: fullName,
+          count: 0,
+          children: new Map(),
+          posts: [],
+        });
+      }
+      const node = current.children.get(part)!;
+      node.count++;
+      
+      // 如果是最后一级，添加文章
+      if (index === parts.length - 1) {
+        node.posts.push(post);
+      }
+      
+      current = node;
+    });
+  });
+
+  return root;
+}
+
+const categoryTree = buildCategoryTree(allPosts);
+
+// 统计总数
+const totalCategories = (() => {
+  let count = 0;
+  function countNodes(node: CategoryNode) {
+    count += node.children.size;
+    node.children.forEach((child) => countNodes(child));
+  }
+  countNodes(categoryTree);
+  return count;
+})();
+
+// 格式化日期
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+// 递归渲染分类节点
+function renderCategoryNode(node: CategoryNode, level: number): string {
+  const sortedChildren = [...node.children.values()].sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
+  const hasChildren = sortedChildren.length > 0;
+  const hasPosts = node.posts.length > 0;
+  
+  let html = '';
+  
+  if (node.name !== 'root') {
+    html += `
+      <div class="category-group level-${level}">
+        <div class="category-header flex items-center justify-between p-4 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors" data-category="${node.fullName}">
+          <div class="flex items-center gap-3">
+            ${hasChildren || hasPosts ? `
+              <button class="category-toggle p-1 hover:bg-muted rounded transition-colors">
+                <svg class="w-4 h-4 chevron text-foreground/40 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            ` : '<div class="w-6"></div>'}
+            <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+            <span class="font-medium">${node.name}</span>
+          </div>
+          <span class="text-sm text-foreground/40 bg-muted px-2.5 py-1 rounded-full">
+            ${node.count} 篇
+          </span>
+        </div>
+    `;
+  }
+  
+  // 子内容
+  if (hasChildren || hasPosts) {
+    const paddingClass = node.name === 'root' ? '' : 'category-content hidden';
+    html += `<div class="${paddingClass}">`;
+    
+    // 文章列表
+    if (hasPosts) {
+      html += `<div class="post-list py-2">`;
+      node.posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()).forEach((post) => {
+        const slug = post.slug || post.id;
+        html += `
+          <a href="/blog/${slug}" class="post-item flex items-center justify-between px-4 py-3 rounded-lg hover:bg-muted/30 transition-colors">
+            <span class="text-foreground/80 hover:text-primary-500 transition-colors">${post.data.title}</span>
+            <span class="text-xs text-foreground/40">${formatDate(post.data.pubDate)}</span>
+          </a>
+        `;
+      });
+      html += `</div>`;
+    }
+    
+    // 子分类
+    sortedChildren.forEach((child) => {
+      html += renderCategoryNode(child, level + 1);
+    });
+    
+    html += `</div>`;
+  }
+  
+  if (node.name !== 'root') {
+    html += `</div>`;
+  }
+  
+  return html;
+}
+---
+
+<BaseLayout title="分类 - NovaBlog">
+  <div class="py-12">
+    <div class="content-width">
+      <div class="text-center mb-12">
+        <h1 class="text-3xl md:text-4xl font-bold mb-4">文章分类</h1>
+        <p class="text-foreground/60">
+          共 {totalCategories} 个分类，{allPosts.length} 篇文章
+        </p>
+      </div>
+
+      {categoryTree.children.size > 0 || categoryTree.posts.length > 0 ? (
+        <div class="max-w-3xl mx-auto">
+          <!-- 未分类文章 -->
+          {categoryTree.posts.length > 0 && (
+            <div class="category-group mb-6">
+              <div class="category-header flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                <div class="flex items-center gap-3">
+                  <svg class="w-5 h-5 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span class="font-medium">未分类</span>
+                </div>
+                <span class="text-sm text-foreground/40 bg-muted px-2 py-1 rounded-full">
+                  {categoryTree.posts.length} 篇
+                </span>
+              </div>
+            </div>
+          )}
+
+          <!-- 分类列表 -->
+          <div class="category-tree" set:html={renderCategoryNode(categoryTree, 0)} />
+        </div>
+      ) : (
+        <div class="text-center py-16 text-foreground/40">
+          <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          <p>暂无分类</p>
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  // 客户端交互：折叠/展开分类
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.category-header').forEach((header) => {
+      header.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        // 只有点击头部或按钮时才切换
+        if (target.closest('.post-item')) return;
+        
+        const group = header.closest('.category-group');
+        const content = group?.querySelector('.category-content') as HTMLElement;
+        const chevron = header.querySelector('.chevron');
+        
+        if (content) {
+          content.classList.toggle('hidden');
+          chevron?.classList.toggle('rotate-90');
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  .category-group {
+    margin-bottom: 0.5rem;
+  }
+
+  .category-header {
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .category-header:hover {
+    background: var(--muted);
+  }
+
+  .category-content {
+    margin-left: 1.5rem;
+    border-left: 2px solid var(--border);
+    padding-left: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .chevron {
+    transition: transform 0.2s;
+  }
+
+  .post-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+  }
+
+  .level-0 > .category-header {
+    background: var(--muted);
+  }
+
+  .level-1 > .category-header {
+    background: color-mix(in srgb, var(--muted) 50%, transparent);
+  }
+
+  .level-2 > .category-header {
+    background: color-mix(in srgb, var(--muted) 30%, transparent);
+  }
+</style>

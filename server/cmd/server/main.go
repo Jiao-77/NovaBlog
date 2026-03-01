@@ -65,8 +65,8 @@ func main() {
 		// 公开接口
 		api.POST("/auth/register", authHandler.Register)
 		api.POST("/auth/login", authHandler.Login)
+		api.GET("/auth/me", authHandler.GetCurrentUser) // 获取当前用户信息（需要 token 但通过 header 传递）
 		api.GET("/comments", commentHandler.GetComments)
-		api.POST("/comments", commentHandler.CreateComment) // 允许访客评论
 		api.GET("/likes", likeHandler.GetLikeStatus)
 		api.POST("/likes", likeHandler.ToggleLike) // 允许访客点赞（基于 IP Hash）
 
@@ -78,7 +78,8 @@ func main() {
 			authGroup.GET("/auth/profile", authHandler.GetProfile)
 			authGroup.PUT("/auth/profile", authHandler.UpdateProfile)
 
-			// 评论相关（用户删除自己的评论）
+			// 评论相关（需要登录才能评论）
+			authGroup.POST("/comments", commentHandler.CreateComment)
 			authGroup.DELETE("/comments/:id", commentHandler.DeleteComment)
 		}
 
