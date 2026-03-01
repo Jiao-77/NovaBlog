@@ -9,7 +9,7 @@
 1. [快速开始](#快速开始)
 2. [文章管理](#文章管理)
 3. [MDX 组件使用](#mdx-组件使用)
-4. [Typst 学术排版](#typst-学术排版)
+4. [React 动效组件](#react-动效组件)
 5. [动效 HTML 块](#动效-html-块)
 6. [评论系统](#评论系统)
 7. [用户注册与登录](#用户注册与登录)
@@ -25,7 +25,6 @@
 
 - Node.js 18+
 - Go 1.21+ (仅后端开发需要)
-- Typst 0.11+ (可选，用于数学公式渲染)
 
 ### 启动开发服务器
 
@@ -140,15 +139,7 @@ import Counter from '../components/Counter.vue';
 <Counter initialCount={0} />
 ```
 
-#### TypstBlock 数学公式
 
-```mdx
-import TypstBlock from '../components/TypstBlock.astro';
-
-<TypstBlock code={`
-  $ f(x) = x^2 + 2x + 1 $
-`} />
-```
 
 ### 自定义组件
 
@@ -206,72 +197,173 @@ import MyButton from '../components/MyButton.vue';
 
 ---
 
-## Typst 学术排版
+## React 动效组件
 
-NovaBlog 内置 Typst 支持，可以渲染高质量的数学公式和学术排版。
+NovaBlog 内置了多个 React 动效组件，可以在 MDX 文章中使用，为内容增添生动的视觉效果。
 
-### 什么是 Typst？
+### 内置 React 动效组件
 
-Typst 是新一代排版系统，具有：
-- 比 LaTeX 更简洁的语法
-- 更快的编译速度
-- 原生支持数学公式
+#### AnimatedCard 悬停动画卡片
 
-### 基本用法
+一个带有悬停效果的卡片组件，当鼠标悬停时会产生上浮和阴影变化效果。
 
 ```mdx
-import TypstBlock from '../components/TypstBlock.astro';
+import AnimatedCard from '../components/react/AnimatedCard';
 
-<TypstBlock code={`
-  $ f(x) = integral_0^infinity e^(-x^2) dif x = sqrt(pi) / 2 $
-`} />
+<AnimatedCard 
+  title="特色功能" 
+  description="NovaBlog 提供丰富的动效组件，让你的博客更加生动" 
+  color="#3b82f6" 
+  client:visible
+/>
 ```
 
-### 数学公式示例
+**属性说明**：
+- `title`：卡片标题
+- `description`：卡片描述
+- `color`：卡片颜色（可选，默认为 `#3b82f6`）
 
-#### 积分
+#### FlipCard 翻转卡片
 
-```typst
-$ integral_0^1 x^2 dif x = 1/3 $
+一个可以点击翻转的卡片组件，展示两面不同的内容。
+
+```mdx
+import FlipCard from '../components/react/FlipCard';
+
+<FlipCard 
+  frontTitle="前端技术" 
+  frontDescription="Astro + Vue + React"
+  backTitle="后端技术" 
+  backDescription="Go + Gin + SQLite"
+  frontColor="#3b82f6"
+  backColor="#10b981"
+  client:visible
+/>
 ```
 
-#### 求和
+**属性说明**：
+- `frontTitle`：正面标题
+- `frontDescription`：正面描述
+- `backTitle`：背面标题
+- `backDescription`：背面描述
+- `frontColor`：正面颜色（可选，默认为 `#3b82f6`）
+- `backColor`：背面颜色（可选，默认为 `#10b981`）
 
-```typst
-$ sum_(i=1)^n i = (n(n+1))/2 $
+#### ParticleBackground 粒子背景
+
+一个带有动态粒子效果的背景组件，可以在粒子上显示自定义内容。
+
+```mdx
+import ParticleBackground from '../components/react/ParticleBackground';
+
+<ParticleBackground 
+  particleCount={100} 
+  color="#6366f1" 
+  speed={1.5}
+  client:visible
+>
+  <div style={{ textAlign: 'center' }}>
+    <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>✨ 欢迎来到 NovaBlog</h2>
+    <p style={{ fontSize: '1.25rem', opacity: 0.9 }}>探索无限可能</p>
+  </div>
+</ParticleBackground>
 ```
 
-#### 矩阵
+**属性说明**：
+- `particleCount`：粒子数量（可选，默认为 50）
+- `color`：粒子颜色（可选，默认为 `#3b82f6`）
+- `speed`：粒子移动速度（可选，默认为 1）
+- `children`：要显示的内容（可选）
 
-```typst
-$ A = mat(
-  1, 2, 3;
-  4, 5, 6;
-  7, 8, 9
-) $
+#### TypewriterText 打字机效果
+
+一个模拟打字机效果的文本组件，逐字显示文本内容。
+
+```mdx
+import TypewriterText from '../components/react/TypewriterText';
+
+<TypewriterText 
+  text="NovaBlog 是一个极简、高效的程序员博客系统" 
+  speed={50} 
+  loop={true}
+  client:visible
+/>
 ```
 
-#### 分数
+**属性说明**：
+- `text`：要显示的文本
+- `speed`：打字速度（可选，默认为 100ms）
+- `loop`：是否循环播放（可选，默认为 false）
+- `style`：自定义样式（可选）
 
-```typst
-$ (a + b) / (c + d) $
+### 在文章中使用
+
+在 MDX 文章中导入并使用这些组件：
+
+```mdx
+---
+title: 动效组件展示
+description: 展示 NovaBlog 中的 React 动效组件
+pubDate: 2024-01-20
+tags: [React, 动效, 组件]
+---
+
+import AnimatedCard from '../components/react/AnimatedCard';
+import FlipCard from '../components/react/FlipCard';
+import ParticleBackground from '../components/react/ParticleBackground';
+import TypewriterText from '../components/react/TypewriterText';
+
+# React 动效组件展示
+
+## 打字机效果
+
+<TypewriterText 
+  text="这是一个打字机效果的示例" 
+  client:visible
+/>
+
+## 悬停卡片
+
+<AnimatedCard 
+  title="悬停效果" 
+  description="鼠标悬停时会产生动画效果" 
+  color="#8b5cf6" 
+  client:visible
+/>
+
+## 翻转卡片
+
+<FlipCard 
+  frontTitle="点击我" 
+  frontDescription="查看背面内容" 
+  backTitle="翻转效果" 
+  backDescription="这是卡片的背面" 
+  client:visible
+/>
+
+## 粒子背景
+
+<ParticleBackground client:visible>
+  <h3>粒子背景效果</h3>
+  <p>带有动态粒子的背景</p>
+</ParticleBackground>
 ```
 
-#### 上下标
+### 自定义样式
 
-```typst
-$ x_1^2 + x_2^2 = r^2 $
+这些组件都支持通过 `style` 属性自定义样式，例如：
+
+```mdx
+<TypewriterText 
+  text="自定义样式示例" 
+  style={{
+    fontSize: '2rem',
+    color: '#ef4444',
+    fontWeight: 'bold'
+  }}
+  client:visible
+/>
 ```
-
-### 高级排版
-
-Typst 还支持：
-- 多行公式对齐
-- 定理环境
-- 化学方程式
-- 代码高亮
-
-更多语法请参考 [Typst 官方文档](https://typst.app/docs)。
 
 ---
 
@@ -584,10 +676,6 @@ public/
 ### Q: 文章修改后没有更新？
 
 A: 开发模式下 Astro 会自动热重载。如果生产构建，需要重新运行 `npm run build`。
-
-### Q: Typst 公式渲染失败？
-
-A: 确保 Typst 已正确安装。运行 `typst --version` 检查。
 
 ### Q: 评论无法发送？
 

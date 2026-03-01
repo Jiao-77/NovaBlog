@@ -1,0 +1,202 @@
+---
+title: Typst 学术排版展示
+description: 展示 NovaBlog 中 Typst 的高级排版能力，包括数学公式、矩阵等学术排版
+pubDate: 2024-01-25
+author: NovaBlog
+tags: [Typst, 排版，数学公式，学术写作]
+category: 教程
+heroImage: /images/hello-world.jpg
+---
+
+# Typst 学术排版展示
+
+Typst 是一款现代化的排版系统，专为学术写作和技术文档设计。本文将展示 NovaBlog 中 Typst 的数学公式排版能力。
+
+## 📐 基础数学公式
+
+### 积分公式
+
+```
+$ integral_0^infinity e^(-x^2) dif x = sqrt(pi) / 2 $
+```
+
+### 极限与导数
+
+```
+$ lim_(x arrow 0) frac(sin x, x) = 1 $
+```
+
+```
+$ frac(dif f, dif x) = lim_(h arrow 0) frac(f(x + h) - f(x), h) $
+```
+
+### 微积分基本定理
+
+```
+$ integral_a^b f(x) dif x = F(b) - F(a) $
+```
+
+---
+
+## 🔢 矩阵与线性代数
+
+### 基础矩阵
+
+```
+$ A = mat(1, 2, 3; 4, 5, 6; 7, 8, 9) $
+```
+
+### 行列式展开
+
+```
+$ det(A) = sum_(i=1)^n a_(1i) dot (-1)^(1+i) dot M_(1i) $
+```
+
+### 特征值方程
+
+```
+$ det(A - lambda I) = 0 $
+```
+
+### 二次型
+
+```
+$ Q(x) = x^T A x = sum_(i,j) a_(ij) x_i x_j $
+```
+
+---
+
+## 📊 统计学与概率论
+
+### 贝叶斯定理
+
+```
+$ P(A | B) = frac(P(B | A) dot P(A), P(B)) $
+```
+
+### 正态分布
+
+```
+$ X tilde N(mu, sigma^2) arrow.f P(x) = frac(1, sigma sqrt(2 pi)) e^(-frac((x-mu)^2, 2 sigma^2)) $
+```
+
+### 期望与方差
+
+```
+$ E[X] = sum_(i=1)^n x_i p_i quad Var(X) = E[X^2] - (E[X])^2 $
+```
+
+---
+
+## 🧮 复杂嵌套表达式
+
+### 巴塞尔问题
+
+```
+$ sum_(n=1)^infinity frac(1, n^2) = frac(pi^2, 6) $
+```
+
+### 欧拉恒等式
+
+```
+$ e^(i pi) + 1 = 0 $
+```
+
+### Gamma 函数
+
+```
+$ Gamma(z) = integral_0^infinity t^(z-1) e^(-t) dif t $
+```
+
+### 斯特林公式
+
+```
+$ n! tilde sqrt(2 pi n) (n/e)^n $
+```
+
+---
+
+## ⚡ 物理学公式
+
+### 麦克斯韦方程组
+
+```
+$ nabla dot E = frac(rho, epsilon_0) $
+```
+
+```
+$ nabla dot B = 0 $
+```
+
+```
+$ nabla times E = -frac(partial B, partial t) $
+```
+
+```
+$ nabla times B = mu_0 J + mu_0 epsilon_0 frac(partial E, partial t) $
+```
+
+### 狭义相对论
+
+```
+$ E = m c^2 $
+```
+
+```
+$ t' = frac(t, sqrt(1 - v^2/c^2)) = gamma t $
+```
+
+```
+$ gamma = frac(1, sqrt(1 - v^2/c^2)) $
+```
+
+### 薛定谔方程
+
+```
+$ i hbar frac(partial psi, partial t) = H^ psi $
+```
+
+---
+
+## 🔬 化学方程式
+
+```
+$ 6 CO_2 + 6 H_2 O arrow.r C_6 H_12 O_6 + 6 O_2 $
+```
+
+```
+$ CH_4 + 2 O_2 arrow.r CO_2 + 2 H_2 O $
+```
+
+---
+
+## 📐 集合论
+
+```
+$ A union B = { x | x in A text( 或 ) x in B } $
+```
+
+```
+$ A intersect B = { x | x in A text( 且 ) x in B } $
+```
+
+```
+$ A setminus B = { x | x in A text( 且 ) x notin B } $
+```
+
+```
+$ P(A) = { S | S subset.eq A } $
+```
+
+---
+
+## 总结
+
+NovaBlog 曾经通过 TypstBlock 组件支持专业的数学公式排版，适合：
+
+- 📐 **数学博客**：微积分、线性代数、概率统计
+- ⚡ **物理笔记**：经典力学、电磁学、量子力学
+- 🔬 **化学公式**：化学反应方程式
+- 📊 **学术论文**：复杂的数学推导和证明
+
+由于技术原因，Typst 支持已暂时移除。

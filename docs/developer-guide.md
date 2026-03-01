@@ -73,7 +73,6 @@ NovaBlog/
 │   │   ├── LoginForm.vue       # 登录表单
 │   │   ├── UserStatus.vue      # 用户状态栏
 │   │   ├── Counter.vue         # 计数器示例
-│   │   ├── TypstBlock.astro    # Typst 渲染组件
 │   │   └── TableOfContents.astro # 目录组件
 │   ├── content/                # 内容集合
 │   │   ├── config.ts           # 内容配置
@@ -797,7 +796,6 @@ docker-compose down      # 停止服务
 - [Tailwind CSS 文档](https://tailwindcss.com)
 - [Gin 框架文档](https://gin-gonic.com)
 - [GORM 文档](https://gorm.io)
-- [Typst 文档](https://typst.app/docs)
 
 ---
 
