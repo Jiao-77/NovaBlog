@@ -1,0 +1,212 @@
+---
+title: React 动效组件展示
+description: 展示 NovaBlog 中可用的 React 动效 HTML 组件，包括悬浮卡片、打字机效果、翻转卡片和粒子背景
+pubDate: 2024-01-20
+author: NovaBlog
+tags: [React, 动效, 组件, 教程]
+category: 教程
+heroImage: /images/react-components.jpg
+---
+
+import AnimatedCard from '../../components/react/AnimatedCard';
+import TypewriterText from '../../components/react/TypewriterText';
+import FlipCard from '../../components/react/FlipCard';
+import ParticleBackground from '../../components/react/ParticleBackground';
+
+# React 动效组件展示
+
+NovaBlog 支持在 MDX 中直接使用 React 组件，实现丰富的交互动效。本文展示了一些内置的动效组件示例。
+
+## 🎴 悬浮卡片 (AnimatedCard)
+
+鼠标悬停时卡片会浮起并放大，配合阴影效果增强立体感。
+
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', margin: '2rem 0' }}>
+  <AnimatedCard 
+    title="🚀 快速开发" 
+    description="使用 Astro + React 实现极速开发体验"
+    color="#3b82f6"
+    client:load
+  />
+  <AnimatedCard 
+    title="🎨 精美设计" 
+    description="内置多种动效组件，轻松创建炫酷页面"
+    color="#10b981"
+    client:load
+  />
+  <AnimatedCard 
+    title="⚡ 高性能" 
+    description="Islands 架构，按需加载，极致性能"
+    color="#f59e0b"
+    client:load
+  />
+</div>
+
+## ⌨️ 打字机效果 (TypewriterText)
+
+模拟打字机的逐字显示效果，支持循环播放。
+
+<div style={{ 
+  background: '#1a1a2e', 
+  padding: '2rem', 
+  borderRadius: '1rem', 
+  textAlign: 'center',
+  margin: '2rem 0'
+}}>
+  <TypewriterText 
+    text="Hello, NovaBlog! 欢迎来到你的新博客..." 
+    speed={80}
+    loop={true}
+    client:load
+  />
+</div>
+
+### 使用方式
+
+```tsx
+<TypewriterText 
+  text="你要显示的文字" 
+  speed={100}      // 打字速度（毫秒）
+  loop={true}      // 是否循环播放
+  client:load
+/>
+```
+
+## 🔄 翻转卡片 (FlipCard)
+
+点击卡片实现 3D 翻转效果，适合展示正反两面内容。
+
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', margin: '2rem 0' }}>
+  <FlipCard
+    frontTitle="💡 小提示"
+    frontDescription="点击翻转查看更多"
+    backTitle="✅ 详细说明"
+    backDescription="这是一个翻转卡片的背面内容"
+    frontColor="#8b5cf6"
+    backColor="#06b6d4"
+    client:load
+  />
+  <FlipCard
+    frontTitle="🎯 技术栈"
+    frontDescription="React + TypeScript"
+    backTitle="📦 组件库"
+    backDescription="支持自定义样式和动画"
+    frontColor="#ec4899"
+    backColor="#14b8a6"
+    client:load
+  />
+</div>
+
+### 使用方式
+
+```tsx
+<FlipCard
+  frontContent={<div>正面内容</div>}
+  backContent={<div>背面内容</div>}
+  frontColor="#3b82f6"
+  backColor="#10b981"
+  client:load
+/>
+```
+
+## ✨ 粒子背景 (ParticleBackground)
+
+基于 Canvas 的粒子动画背景，粒子之间会自动连线，营造科技感。
+
+<ParticleBackground 
+  particleCount={60}
+  color="#60a5fa"
+  speed={0.8}
+  client:load
+/>
+
+### 自定义内容
+
+<ParticleBackground 
+  particleCount={30}
+  color="#f472b6"
+  speed={1.5}
+  client:load
+>
+  <div style={{ textAlign: 'center' }}>
+    <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🎉 自定义内容</h2>
+    <p>可以在粒子背景上放置任意内容</p>
+  </div>
+</ParticleBackground>
+
+## 📝 如何在文章中使用
+
+### 1. 导入组件
+
+在文章顶部添加 import 语句：
+
+```mdx
+import AnimatedCard from '../../components/react/AnimatedCard';
+```
+
+### 2. 使用组件
+
+```mdx
+<AnimatedCard 
+  title="标题" 
+  description="描述"
+  color="#3b82f6"
+  client:load
+/>
+```
+
+### 3. client 指令说明
+
+| 指令 | 说明 |
+|------|------|
+| `client:load` | 页面加载时立即激活组件 |
+| `client:visible` | 组件进入视口时激活 |
+| `client:idle` | 浏览器空闲时激活 |
+| `client:media="(min-width: 768px)"` | 满足媒体查询时激活 |
+
+## 🎨 创建自定义组件
+
+你可以在 `src/components/react/` 目录下创建自己的 React 组件：
+
+```tsx
+// src/components/react/MyComponent.tsx
+import { useState } from 'react';
+
+interface MyComponentProps {
+  title: string;
+}
+
+export default function MyComponent({ title }: MyComponentProps) {
+  const [count, setCount] = useState(0);
+  
+  return (
+    <div style={{ padding: '1rem', background: '#f3f4f6' }}>
+      <h3>{title}</h3>
+      <button onClick={() => setCount(count + 1)}>
+        点击次数: {count}
+      </button>
+    </div>
+  );
+}
+```
+
+然后在文章中使用：
+
+```mdx
+import MyComponent from '../../components/react/MyComponent';
+
+<MyComponent title="我的组件" client:load />
+```
+
+---
+
+## 总结
+
+NovaBlog 提供了灵活的组件系统，让你可以在 Markdown 中嵌入丰富的交互内容。通过 React 组件，你可以实现：
+
+- 🎴 **视觉效果**：悬浮、翻转、渐变等动画
+- ⌨️ **动态文字**：打字机、滚动、闪烁效果
+- ✨ **背景特效**：粒子、波浪、光效
+- 🎮 **交互功能**：计数器、表单、游戏
+
+快去尝试创建属于你自己的动效组件吧！ 🚀

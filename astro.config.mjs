@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import vue from '@astrojs/vue';
 import tailwind from '@astrojs/tailwind';
+import react from '@astrojs/react';
 
 // https://astro.build/config
 export default defineConfig({
@@ -13,6 +14,7 @@ export default defineConfig({
       optimize: true,
     }),
     vue(),
+    react(),
     tailwind({
       applyBaseStyles: false, // 我们将手动控制基础样式
     }),
