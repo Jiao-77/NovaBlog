@@ -4,11 +4,18 @@ import CommentSection from '../components/CommentSection.vue';
 import LikeButton from '../components/LikeButton.vue';
 import type { CollectionEntry } from 'astro:content';
 
-interface Props {
-  post: CollectionEntry<'blog'>;
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
 }
 
-const { post } = Astro.props;
+interface Props {
+  post: CollectionEntry<'blog'>;
+  headings?: Heading[];
+}
+
+const { post, headings = [] } = Astro.props;
 const { title, description, pubDate, updatedDate, heroImage, heroAlt, tags, author, category } = post.data;
 
 // 格式化日期
@@ -22,9 +29,63 @@ const formatDate = (date: Date) => {
 
 // 计算阅读时间（估算）
 const readingTime = Math.ceil(post.body?.split(/\s+/).length / 400) || 1;
+
+// 是否显示目录
+const hasToc = headings.length > 0;
+
+// 过滤出 h2 和 h3 标题
+const tocItems = headings.filter(h => h.depth >= 2 && h.depth <= 3);
 ---
 
 <BaseLayout title={title} description={description} image={heroImage}>
+  <!-- 移动端悬浮按钮 -->
+  {hasToc && (
+    <button 
+      id="toc-toggle" 
+      class="toc-toggle xl:hidden"
+      aria-label="切换目录"
+      type="button"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+      </svg>
+      <span class="ml-1 text-sm font-medium">目录</span>
+    </button>
+  )}
+
+  <!-- 移动端遮罩层 -->
+  {hasToc && (
+    <div id="toc-overlay" class="toc-overlay xl:hidden"></div>
+  )}
+
+  <!-- 移动端目录面板 -->
+  {hasToc && (
+    <nav id="toc-nav-mobile" class="toc-nav-mobile xl:hidden" aria-label="文章目录">
+      <div class="toc-header">
+        <span class="text-sm font-semibold text-foreground">目录</span>
+        <button id="toc-close" class="toc-close" aria-label="关闭目录" type="button">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <ul class="toc-list">
+        {tocItems.map((heading) => (
+          <li class={`toc-item toc-depth-${heading.depth}`}>
+            <a 
+              href={`#${heading.slug}`} 
+              class="toc-link"
+              data-heading-slug={heading.slug}
+            >
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )}
+
   <article class="py-12">
     <!-- 文章头部 -->
     <header class="content-width mb-12">
@@ -90,12 +151,37 @@ const readingTime = Math.ceil(post.body?.split(/\s+/).length / 400) || 1;
       )}
     </header>
 
-    <!-- 文章内容 -->
+    <!-- 文章内容区域 -->
     <div class="content-width">
-      <div class="max-w-3xl mx-auto">
-        <div class="prose-container prose-headings:font-semibold prose-headings:tracking-tight prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary-500 prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-code:text-primary-400">
-          <slot />
+      <div class="flex gap-8 relative">
+        <!-- 文章主体 -->
+        <div class={`flex-1 min-w-0 ${hasToc ? 'max-w-3xl' : 'max-w-4xl mx-auto'}`}>
+          <div class="prose-container prose-headings:font-semibold prose-headings:tracking-tight prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary-500 prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-code:text-primary-400">
+            <slot />
+          </div>
         </div>
+        
+        <!-- 桌面端右侧目录 -->
+        {hasToc && (
+          <aside class="hidden xl:block w-48 flex-shrink-0">
+            <nav class="sticky top-24" aria-label="文章目录">
+              <div class="text-sm font-semibold text-foreground mb-3">目录</div>
+              <ul class="toc-list-desktop">
+                {tocItems.map((heading) => (
+                  <li class={`toc-item toc-depth-${heading.depth}`}>
+                    <a 
+                      href={`#${heading.slug}`} 
+                      class="toc-link"
+                      data-heading-slug={heading.slug}
+                    >
+                      {heading.text}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </aside>
+        )}
       </div>
     </div>
 
@@ -126,3 +212,266 @@ const readingTime = Math.ceil(post.body?.split(/\s+/).length / 400) || 1;
     </footer>
   </article>
 </BaseLayout>
+
+<style>
+  /* 移动端悬浮按钮 */
+  .toc-toggle {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    border-radius: 9999px;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .toc-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+  }
+
+  /* 桌面端隐藏移动端按钮和遮罩 */
+  @media (min-width: 1280px) {
+    .toc-toggle {
+      display: none !important;
+    }
+    .toc-overlay {
+      display: none !important;
+    }
+  }
+
+  /* 移动端目录面板 */
+  .toc-nav-mobile {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 16rem;
+    height: 100vh;
+    background: var(--color-background);
+    border-left: 1px solid var(--color-border);
+    padding: 1.5rem;
+    z-index: 50;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+  }
+
+  /* 桌面端隐藏移动端面板 */
+  @media (min-width: 1280px) {
+    .toc-nav-mobile {
+      display: none !important;
+    }
+  }
+
+  .toc-nav-mobile.open {
+    transform: translateX(0);
+  }
+
+  /* 遮罩层 */
+  .toc-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 45;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .toc-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* 目录头部 */
+  .toc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .toc-close {
+    padding: 0.25rem;
+    color: var(--color-muted-foreground);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+  }
+
+  .toc-close:hover {
+    color: var(--color-foreground);
+    background: var(--color-muted);
+  }
+
+  /* 目录列表 - 移动端 */
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* 目录列表 - 桌面端 */
+  .toc-list-desktop {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .toc-item {
+    margin: 0;
+  }
+
+  .toc-link {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--color-muted-foreground);
+    text-decoration: none;
+    border-radius: 0.375rem;
+    border-left: 2px solid transparent;
+    transition: all 0.15s ease;
+  }
+
+  .toc-link:hover {
+    color: var(--color-foreground);
+    background: var(--color-muted);
+  }
+
+  .toc-link.active {
+    color: var(--color-primary-500);
+    border-left-color: var(--color-primary-500);
+    background: rgba(59, 130, 246, 0.1);
+    font-weight: 500;
+  }
+
+  /* 缩进层级 */
+  .toc-depth-3 {
+    padding-left: 0.5rem;
+  }
+
+  .toc-depth-3 .toc-link {
+    font-size: 0.75rem;
+    padding-left: 1rem;
+  }
+
+  /* 滚动条样式 */
+  .toc-nav-mobile::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .toc-nav-mobile::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .toc-nav-mobile::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+</style>
+
+<script>
+  // DOM 元素
+  const tocToggle = document.getElementById('toc-toggle');
+  const tocNavMobile = document.getElementById('toc-nav-mobile');
+  const tocClose = document.getElementById('toc-close');
+  const tocOverlay = document.getElementById('toc-overlay');
+  const tocLinks = document.querySelectorAll('.toc-link');
+
+  // 切换目录显示
+  function openToc() {
+    tocNavMobile?.classList.add('open');
+    tocOverlay?.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeToc() {
+    tocNavMobile?.classList.remove('open');
+    tocOverlay?.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // 绑定事件
+  tocToggle?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (tocNavMobile?.classList.contains('open')) {
+      closeToc();
+    } else {
+      openToc();
+    }
+  });
+  
+  tocClose?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeToc();
+  });
+  
+  tocOverlay?.addEventListener('click', closeToc);
+
+  // 点击链接后关闭目录（移动端）
+  tocLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth < 1280) {
+        closeToc();
+      }
+    });
+  });
+
+  // 监听窗口大小变化
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 1280) {
+      closeToc();
+    }
+  });
+
+  // ESC 键关闭
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeToc();
+    }
+  });
+
+  // 滚动高亮当前标题
+  const headings = document.querySelectorAll('article h2[id], article h3[id]');
+  
+  const observerOptions = {
+    rootMargin: '-80px 0px -70% 0px',
+    threshold: 0
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        tocLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link instanceof HTMLAnchorElement) {
+            const slug = link.getAttribute('data-heading-slug');
+            if (slug === id) {
+              link.classList.add('active');
+            }
+          }
+        });
+      }
+    });
+  }, observerOptions);
+
+  headings.forEach(heading => {
+    observer.observe(heading);
+  });
+</script>
