@@ -164,7 +164,7 @@ const tocItems = headings.filter(h => h.depth >= 2 && h.depth <= 3);
         <!-- 桌面端右侧目录 -->
         {hasToc && (
           <aside class="hidden xl:block w-56 flex-shrink-0">
-            <nav class="sticky top-24" aria-label="文章目录">
+            <nav class="toc-nav-desktop" aria-label="文章目录">
               <div class="text-sm font-semibold text-foreground mb-3">目录</div>
               <ul class="toc-list-desktop">
                 {tocItems.map((heading) => (
@@ -328,6 +328,32 @@ const tocItems = headings.filter(h => h.depth >= 2 && h.depth <= 3);
     list-style: none;
     padding: 0;
     margin: 0;
+  }
+
+  /* 桌面端目录导航 */
+  .toc-nav-desktop {
+    position: sticky;
+    top: 6rem;
+    max-height: calc(100vh - 8rem);
+    overflow-y: auto;
+  }
+
+  /* 桌面端目录滚动条样式 */
+  .toc-nav-desktop::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .toc-nav-desktop::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .toc-nav-desktop::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+
+  .toc-nav-desktop::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted-foreground);
   }
 
   .toc-item {
