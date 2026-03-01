@@ -50,8 +50,22 @@ func Load() *Config {
 			ExpireTime: getEnvAsInt("JWT_EXPIRE_HOURS", 24*7), // 默认 7 天
 		},
 		CORS: CORSConfig{
+			// 开发环境允许所有 localhost 端口
 			AllowOrigins: []string{
-				getEnv("CORS_ORIGIN", "http://localhost:4321"),
+				"http://localhost:4321",
+				"http://localhost:4322",
+				"http://localhost:4323",
+				"http://localhost:4324",
+				"http://localhost:4325",
+				"http://localhost:4326",
+				"http://localhost:3000",
+				"http://127.0.0.1:4321",
+				"http://127.0.0.1:4322",
+				"http://127.0.0.1:4323",
+				"http://127.0.0.1:4324",
+				"http://127.0.0.1:4325",
+				"http://127.0.0.1:4326",
+				"http://127.0.0.1:3000",
 			},
 		},
 	}
