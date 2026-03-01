@@ -1,0 +1,88 @@
+---
+title: 'NovaBlog 入门指南'
+description: '这是一篇介绍 NovaBlog 博客系统核心功能的示例文章，展示 MDX 动态组件支持。'
+pubDate: 2026-02-28
+author: 'NovaBlog Team'
+category: '教程'
+tags: ['入门', 'MDX', 'Astro']
+heroImage: '/images/hello-world.jpg'
+---
+
+# 欢迎来到 NovaBlog
+
+NovaBlog 是一个极简、高效的程序员博客系统，采用 **静态渲染 + 轻量级微服务** 架构。
+
+## 核心特性
+
+### 🚀 极致性能
+
+基于 Astro 的 Islands Architecture（群岛架构），大部分页面为 Zero-JS，仅在需要交互的地方加载 JavaScript。
+
+### ✍️ MDX 支持
+
+在 Markdown 中直接嵌入交互组件：
+
+```jsx
+<Counter client:visible />
+```
+
+上面的组件会在可见时自动加载并挂载 JavaScript。
+
+### 📐 Typst 学术排版
+
+支持复杂的数学公式渲染：
+
+<TypstBlock>
+$ integral_0^infinity e^(-x^2) dif x = sqrt(pi) / 2 $
+</TypstBlock>
+
+## 代码高亮
+
+支持多种编程语言的语法高亮：
+
+```typescript
+// TypeScript 示例
+interface Post {
+  title: string;
+  content: string;
+  tags: string[];
+}
+
+async function getPosts(): Promise<Post[]> {
+  return await fetch('/api/posts').then(res => res.json());
+}
+```
+
+```go
+// Go 示例
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello, NovaBlog!")
+}
+```
+
+## 表格支持
+
+| 特性 | 描述 |
+|------|------|
+| 静态渲染 | 构建时生成 HTML，极速加载 |
+| MDX 支持 | 在 Markdown 中嵌入组件 |
+| 低资源 | 2C1G 即可运行 |
+| Docker | 一键容器化部署 |
+
+## 引用
+
+> 优秀的博客系统应该让作者专注于内容，而非配置。
+> 
+> — NovaBlog 设计理念
+
+## 下一步
+
+1. 在 `src/content/blog/` 目录下创建新的 `.md` 或 `.mdx` 文件
+2. 配置 Frontmatter 元数据
+3. 运行 `npm run dev` 预览效果
+
+开始你的写作之旅吧！ 🎉

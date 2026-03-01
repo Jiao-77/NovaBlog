@@ -1,0 +1,197 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+// 获取最新的博客文章
+const allPosts = await getCollection('blog', ({ data }) => {
+  return !data.draft;
+});
+
+// 按日期排序
+const sortedPosts = allPosts.sort((a, b) => 
+  b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+
+// 获取前6篇作为精选
+const featuredPosts = sortedPosts.slice(0, 6);
+
+// 获取所有标签
+const allTags = [...new Set(allPosts.flatMap(post => post.data.tags || []))];
+
+// 格式化日期
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+---
+
+<BaseLayout title="NovaBlog - 极简程序员博客">
+  <!-- Hero Section -->
+  <section class="py-20 md:py-32 bg-gradient-to-br from-primary-50 via-background to-accent/10 dark:from-primary-900/20 dark:to-accent/5">
+    <div class="content-width text-center">
+      <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+        <span class="gradient-text">NovaBlog</span>
+      </h1>
+      <p class="text-xl md:text-2xl text-foreground/60 max-w-2xl mx-auto mb-8">
+        一个极简、高效的程序员博客系统
+      </p>
+      <p class="text-foreground/50 max-w-xl mx-auto mb-10">
+        支持 MDX 动态组件、Typst 学术排版，静态渲染 + 轻量级微服务架构，极致性能与优雅排版的完美结合
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="/blog" class="btn-primary">
+          浏览文章
+          <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </a>
+        <a href="/about" class="btn-secondary">
+          了解更多
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Posts -->
+  <section class="py-16">
+    <div class="content-width">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-2xl md:text-3xl font-bold">最新文章</h2>
+        <a href="/blog" class="text-primary-500 hover:text-primary-600 transition-colors flex items-center gap-1">
+          查看全部
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+
+      {featuredPosts.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {featuredPosts.map((post) => (
+            <article class="card group cursor-pointer">
+              <a href={`/blog/${post.slug || post.id}`}>
+                {/* 封面图 */}
+                {post.data.heroImage ? (
+                  <div class="aspect-video rounded-lg overflow-hidden mb-4 -mt-6 -mx-6 w-[calc(100%+3rem)]">
+                    <img
+                      src={post.data.heroImage}
+                      alt={post.data.heroAlt || post.data.title}
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div class="aspect-video rounded-lg bg-gradient-to-br from-primary-100 to-accent/20 dark:from-primary-900 dark:to-accent/10 mb-4 -mt-6 -mx-6 w-[calc(100%+3rem)] flex items-center justify-center">
+                    <svg class="w-12 h-12 text-primary-300 dark:text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                )}
+
+                <!-- 分类 -->
+                {post.data.category && (
+                  <span class="tag text-xs mb-3">
+                    {post.data.category}
+                  </span>
+                )}
+
+                <!-- 标题 -->
+                <h3 class="text-lg font-semibold mb-2 group-hover:text-primary-500 transition-colors line-clamp-2">
+                  {post.data.title}
+                </h3>
+
+                <!-- 描述 -->
+                {post.data.description && (
+                  <p class="text-foreground/60 text-sm mb-4 line-clamp-2">
+                    {post.data.description}
+                  </p>
+                )}
+
+                <!-- 元信息 -->
+                <div class="flex items-center justify-between text-xs text-foreground/40">
+                  <span>{formatDate(post.data.pubDate)}</span>
+                  <span>{post.data.author}</span>
+                </div>
+              </a>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-16 text-foreground/40">
+          <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p>暂无文章，请在 src/content/blog/ 目录下添加 Markdown 文件</p>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- Tags Section -->
+  <section class="py-16 bg-muted/30">
+    <div class="content-width">
+      <h2 class="text-2xl md:text-3xl font-bold mb-8 text-center">标签云</h2>
+      {allTags.length > 0 ? (
+        <div class="flex flex-wrap justify-center gap-3">
+          {allTags.map((tag: string) => (
+            <a href={`/tags/${tag}`} class="tag hover:bg-primary-200 dark:hover:bg-primary-800 transition-colors">
+              #{tag}
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="text-center text-foreground/40">暂无标签</p>
+      )}
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="py-16">
+    <div class="content-width">
+      <h2 class="text-2xl md:text-3xl font-bold mb-12 text-center">核心特性</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Feature 1 -->
+        <div class="text-center">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+            <svg class="w-8 h-8 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">极致性能</h3>
+          <p class="text-foreground/60 text-sm">
+            静态渲染 + Islands 架构，Zero-JS 默认，极致的加载速度
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="text-center">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+            <svg class="w-8 h-8 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">MDX 支持</h3>
+          <p class="text-foreground/60 text-sm">
+            在 Markdown 中嵌入 Vue/React 组件，实现丰富的交互效果
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="text-center">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+            <svg class="w-8 h-8 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">低资源占用</h3>
+          <p class="text-foreground/60 text-sm">
+            Go 后端 + SQLite，2C1G 小鸡也能流畅运行
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

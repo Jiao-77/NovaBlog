@@ -1,0 +1,54 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+// 获取所有文章
+const allPosts = await getCollection('blog', ({ data }) => {
+  return !data.draft;
+});
+
+// 统计标签
+const tagMap = new Map<string, number>();
+allPosts.forEach((post) => {
+  (post.data.tags || []).forEach((tag: string) => {
+    tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
+  });
+});
+
+// 按文章数量排序
+const sortedTags = [...tagMap.entries()].sort((a, b) => b[1] - a[1]);
+---
+
+<BaseLayout title="标签 - NovaBlog">
+  <div class="py-12">
+    <div class="content-width">
+      <div class="text-center mb-12">
+        <h1 class="text-3xl md:text-4xl font-bold mb-4">标签</h1>
+        <p class="text-foreground/60">按标签浏览文章</p>
+      </div>
+
+      {sortedTags.length > 0 ? (
+        <div class="max-w-2xl mx-auto">
+          <div class="flex flex-wrap justify-center gap-4">
+            {sortedTags.map(([tag, count]) => (
+              <a
+                href={`/tags/${tag}`}
+                class="card px-6 py-4 flex items-center gap-3 hover:border-primary-500 transition-colors"
+              >
+                <span class="text-lg font-medium">#{tag}</span>
+                <span class="text-sm text-foreground/40">{count} 篇文章</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div class="text-center py-16 text-foreground/40">
+          <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+          <p>暂无标签</p>
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,117 @@
+# ===========================================
+# NovaBlog .gitignore
+# ===========================================
+
+# -------------- Node.js / Astro --------------
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+.astro/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# -------------- Go / Server --------------
+# Binary
+server/novablog
+server/server
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test coverage
+*.out
+coverage.txt
+
+# Go vendor
+vendor/
+
+# -------------- Database --------------
+# SQLite database (runtime data, not source control)
+server/data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Keep directory structure but ignore db files
+!server/data/.gitkeep
+
+# -------------- Docker --------------
+# Docker volumes (if using local bind mounts)
+.docker/
+
+# -------------- IDE / Editor --------------
+# JetBrains
+.idea/
+
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+
+# -------------- Misc --------------
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.backup
+
+# Log files
+logs/
+*.log
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+
+# Secrets (never commit sensitive data)
+*.pem
+*.key
+secrets/

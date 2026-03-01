@@ -1,0 +1,102 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+// 生成所有标签的静态路径
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  const allTags = [...new Set(posts.flatMap((post) => post.data.tags || []))];
+  return allTags.map((tag) => ({
+    params: { tag },
+  }));
+}
+
+// 获取当前标签
+const { tag } = Astro.params;
+
+// 获取该标签下的所有文章
+const allPosts = await getCollection('blog', ({ data }) => {
+  return !data.draft && (data.tags || []).includes(tag || '');
+});
+
+// 按日期排序
+const sortedPosts = allPosts.sort((a, b) => 
+  b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+
+// 格式化日期
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+---
+
+<BaseLayout title={`#${tag} - NovaBlog`}>
+  <div class="py-12">
+    <div class="content-width">
+      <div class="text-center mb-12">
+        <h1 class="text-3xl md:text-4xl font-bold mb-4">
+          <span class="gradient-text">#{tag}</span>
+        </h1>
+        <p class="text-foreground/60">{sortedPosts.length} 篇文章</p>
+      </div>
+
+      <div class="max-w-4xl mx-auto space-y-8">
+        {sortedPosts.map((post) => (
+          <article class="card group">
+            <a href={`/blog/${post.slug || post.id}`} class="block">
+              <div class="flex flex-col md:flex-row gap-6">
+                <!-- 封面图 -->
+                {post.data.heroImage ? (
+                  <div class="md:w-48 flex-shrink-0">
+                    <div class="aspect-video md:aspect-square rounded-lg overflow-hidden">
+                      <img
+                        src={post.data.heroImage}
+                        alt={post.data.heroAlt || post.data.title}
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                ) : null}
+
+                <!-- 内容 -->
+                <div class="flex-1 min-w-0">
+                  <!-- 标题 -->
+                  <h2 class="text-xl font-semibold mb-2 group-hover:text-primary-500 transition-colors">
+                    {post.data.title}
+                  </h2>
+
+                  <!-- 描述 -->
+                  {post.data.description && (
+                    <p class="text-foreground/60 text-sm mb-4 line-clamp-2">
+                      {post.data.description}
+                    </p>
+                  )}
+
+                  <!-- 元信息 -->
+                  <div class="flex items-center gap-4 text-xs text-foreground/40">
+                    <span>{formatDate(post.data.pubDate)}</span>
+                    <span>{post.data.author}</span>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </article>
+        ))}
+      </div>
+
+      <div class="text-center mt-12">
+        <a href="/tags" class="btn-secondary">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          返回标签列表
+        </a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

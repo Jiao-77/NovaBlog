@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import LoginForm from '../components/LoginForm.vue';
+---
+
+<BaseLayout title="登录 - NovaBlog">
+  <main class="login-page">
+    <h1 class="page-title">欢迎回来</h1>
+    <p class="page-subtitle">登录您的账户以发表评论和管理内容</p>
+    <LoginForm client:visible />
+  </main>
+</BaseLayout>
+
+<style>
+  .login-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  .page-title {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+
+  .page-subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+  }
+</style>
+</task_progress>
+</write_to_file>

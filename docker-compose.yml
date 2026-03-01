@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # 前端服务 (Nginx 托管静态文件)
+  frontend:
+    image: nginx:alpine
+    container_name: novablog-frontend
+    ports:
+      - "80:80"
+    volumes:
+      - ./dist:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # 后端 API 服务
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: novablog-api
+    ports:
+      - "8080:8080"
+    environment:
+      - GIN_MODE=release
+      - SERVER_PORT=8080
+      - DB_PATH=/app/data/novablog.db
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-me}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost}
+    volumes:
+      - novablog-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  novablog-data:

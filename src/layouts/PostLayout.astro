@@ -1,0 +1,128 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import CommentSection from '../components/CommentSection.vue';
+import LikeButton from '../components/LikeButton.vue';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+}
+
+const { post } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, heroAlt, tags, author, category } = post.data;
+
+// 格式化日期
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
+// 计算阅读时间（估算）
+const readingTime = Math.ceil(post.body?.split(/\s+/).length / 400) || 1;
+---
+
+<BaseLayout title={title} description={description} image={heroImage}>
+  <article class="py-12">
+    <!-- 文章头部 -->
+    <header class="content-width mb-12">
+      <!-- 分类和标签 -->
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        {category && (
+          <span class="tag bg-primary-500 text-white">
+            {category}
+          </span>
+        )}
+        {tags && tags.map((tag: string) => (
+          <span class="tag">
+            #{tag}
+          </span>
+        ))}
+      </div>
+
+      <!-- 标题 -->
+      <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+        {title}
+      </h1>
+
+      <!-- 元信息 -->
+      <div class="article-meta flex-wrap">
+        <span class="flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          {author}
+        </span>
+        <span class="flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          发布于 {formatDate(pubDate)}
+        </span>
+        {updatedDate && (
+          <span class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            更新于 {formatDate(updatedDate)}
+          </span>
+        )}
+        <span class="flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          预计阅读 {readingTime} 分钟
+        </span>
+      </div>
+
+      <!-- 封面图 -->
+      {heroImage && (
+        <div class="mt-8 rounded-xl overflow-hidden">
+          <img
+            src={heroImage}
+            alt={heroAlt || title}
+            class="w-full aspect-video object-cover"
+            loading="eager"
+          />
+        </div>
+      )}
+    </header>
+
+    <!-- 文章内容 -->
+    <div class="content-width">
+      <div class="max-w-3xl mx-auto">
+        <div class="prose-container prose-headings:font-semibold prose-headings:tracking-tight prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary-500 prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-code:text-primary-400">
+          <slot />
+        </div>
+      </div>
+    </div>
+
+    <!-- 文章底部 -->
+    <footer class="content-width mt-12">
+      <div class="max-w-3xl mx-auto">
+        <!-- 点赞按钮 -->
+        <div class="flex justify-center py-6">
+          <LikeButton postId={post.id} client:visible />
+        </div>
+
+        <!-- 分割线 -->
+        <hr class="border-border my-8" />
+
+        <!-- 文章导航 -->
+        <div class="flex justify-between items-center gap-4 py-6">
+          <a href="/blog" class="btn-secondary">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            返回文章列表
+          </a>
+        </div>
+
+        <!-- 评论区 -->
+        <CommentSection postId={post.id} client:visible />
+      </div>
+    </footer>
+  </article>
+</BaseLayout>
