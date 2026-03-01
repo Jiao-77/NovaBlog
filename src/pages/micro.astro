@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MicroPage from '../components/react/MicroPage';
+---
+
+<BaseLayout title="微语 - NovaBlog" description="分享生活点滴，记录每一个精彩瞬间">
+  <div class="py-12">
+    <div class="content-width">
+      <MicroPage client:load />
+    </div>
+  </div>
+</BaseLayout>
