@@ -44,6 +44,7 @@ Thumbs.db
 # Binary
 server/novablog
 server/server
+server/novablog-server
 *.exe
 *.exe~
 *.dll
