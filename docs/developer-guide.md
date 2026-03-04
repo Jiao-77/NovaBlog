@@ -79,10 +79,8 @@ NovaBlog/
 │   │       ├── FlipCard.tsx
 │   │       ├── ParticleBackground.tsx
 │   │       ├── TypewriterText.tsx
-│   │       ├── Heatmap.tsx     # 热力图组件
-│   │       ├── MicroList.tsx   # 微语列表
-│   │       ├── MicroComposer.tsx # 发布微语
-│   │       └── MicroPage.tsx   # 微语页面容器
+│   │       ├── MergeTable.tsx
+│   │       └── MathFlipCard.tsx
 │   ├── content/                # 内容集合
 │   │   ├── config.ts           # 内容配置
 │   │   └── blog/               # 博客文章
@@ -92,7 +90,6 @@ NovaBlog/
 │   ├── pages/                  # 页面路由
 │   │   ├── index.astro         # 首页
 │   │   ├── login.astro         # 登录页
-│   │   ├── micro.astro         # 微语页
 │   │   ├── blog/               # 博客相关页面
 │   │   ├── tags/               # 标签页面
 │   │   └── categories/         # 分类页面
@@ -111,8 +108,7 @@ NovaBlog/
 │   │   ├── handlers/           # HTTP 处理器
 │   │   │   ├── auth.go         # 认证处理
 │   │   │   ├── comment.go      # 评论处理
-│   │   │   ├── like.go         # 点赞处理
-│   │   │   └── micro.go        # 微语处理
+│   │   │   └── like.go         # 点赞处理
 │   │   ├── middleware/         # 中间件
 │   │   ├── models/             # 数据模型
 │   │   └── utils/              # 工具函数
@@ -330,171 +326,6 @@ Authorization: Bearer <token>  // 可选
 
 **响应**: 同切换接口
 
-### 微语接口
-
-#### 获取微语列表
-
-```http
-GET /api/micros?page=1&page_size=20&user_id=1
-Authorization: Bearer <token>  // 可选
-```
-
-**参数**:
-- `page` (可选): 页码，默认 1
-- `page_size` (可选): 每页数量，默认 20，最大 50
-- `user_id` (可选): 指定用户的微语
-
-**响应**:
-```json
-{
-  "data": [
-    {
-      "id": 1,
-      "content": "今天天气真好！",
-      "images": "[]",
-      "tags": "[\"生活\", \"日常\"]",
-      "is_public": true,
-      "created_at": "2024-01-15T10:00:00Z",
-      "updated_at": "2024-01-15T10:00:00Z",
-      "user": {
-        "id": 1,
-        "username": "testuser",
-        "nickname": "测试用户",
-        "avatar": "https://..."
-      },
-      "like_count": 5,
-      "is_liked": false
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "page_size": 20,
-    "total": 100,
-    "total_page": 5
-  }
-}
-```
-
-#### 获取单条微语
-
-```http
-GET /api/micros/:id
-Authorization: Bearer <token>  // 可选
-```
-
-#### 发布微语
-
-```http
-POST /api/micros
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "content": "string",     // 必填，最多 2000 字
-  "images": ["url1", "url2"],  // 可选，图片 URL 数组
-  "tags": ["tag1", "tag2"],    // 可选，标签数组
-  "is_public": true        // 可选，默认 true
-}
-```
-
-**响应**:
-```json
-{
-  "id": 1,
-  "content": "今天天气真好！",
-  "images": "[]",
-  "tags": "[\"生活\"]",
-  "is_public": true,
-  "created_at": "2024-01-15T10:00:00Z",
-  "user": {...},
-  "like_count": 0,
-  "is_liked": false
-}
-```
-
-#### 更新微语
-
-```http
-PUT /api/micros/:id
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "content": "string",
-  "images": ["url1"],
-  "tags": ["tag1"],
-  "is_public": true
-}
-```
-
-**权限**: 仅作者可修改
-
-#### 删除微语
-
-```http
-DELETE /api/micros/:id
-Authorization: Bearer <token>
-```
-
-**权限**: 作者或管理员可删除
-
-#### 点赞/取消点赞微语
-
-```http
-POST /api/micros/:id/like
-Authorization: Bearer <token>
-```
-
-**响应**:
-```json
-{
-  "liked": true,
-  "message": "点赞成功"
-}
-```
-
-#### 获取热力图数据
-
-```http
-GET /api/micros/heatmap?year=2024&user_id=1
-```
-
-**参数**:
-- `year` (可选): 年份，默认当前年
-- `user_id` (可选): 指定用户
-
-**响应**:
-```json
-[
-  { "date": "2024-01-15", "count": 3 },
-  { "date": "2024-01-16", "count": 1 },
-  { "date": "2024-01-20", "count": 5 }
-]
-```
-
-#### 获取统计数据
-
-```http
-GET /api/micros/stats?user_id=1
-```
-
-**响应**:
-```json
-{
-  "total_micros": 150,
-  "total_users": 25,
-  "top_users": [
-    {
-      "user_id": 1,
-      "username": "admin",
-      "nickname": "管理员",
-      "avatar": "...",
-      "post_count": 45
-    }
-  ]
-}
-```
-
 ### 错误响应格式
 
 ```json
@@ -595,46 +426,6 @@ CREATE TABLE post_meta (
 );
 
 CREATE INDEX idx_post_meta_post_id ON post_meta(post_id);
-```
-
-### micro_posts 表
-
-```sql
-CREATE TABLE micro_posts (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  created_at DATETIME,
-  updated_at DATETIME,
-  deleted_at DATETIME,          -- 软删除
-  user_id INTEGER NOT NULL,     -- 关联 users.id
-  content TEXT NOT NULL,        -- 微语内容，最多 2000 字
-  images TEXT,                  -- JSON 数组存储图片 URL
-  tags TEXT,                    -- JSON 数组存储标签
-  is_public BOOLEAN DEFAULT 1,  -- 是否公开
-  
-  FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
-CREATE INDEX idx_micro_posts_user_id ON micro_posts(user_id);
-CREATE INDEX idx_micro_posts_deleted_at ON micro_posts(deleted_at);
-CREATE INDEX idx_micro_posts_created_at ON micro_posts(created_at);
-```
-
-### micro_post_likes 表
-
-```sql
-CREATE TABLE micro_post_likes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  created_at DATETIME,
-  micro_post_id INTEGER NOT NULL,  -- 关联 micro_posts.id
-  user_id INTEGER NOT NULL,        -- 关联 users.id
-  
-  FOREIGN KEY (micro_post_id) REFERENCES micro_posts(id),
-  FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
--- 防止同一用户重复点赞同一条微语
-CREATE UNIQUE INDEX idx_micropost_user ON micro_post_likes(micro_post_id, user_id);
-CREATE INDEX idx_micropost_likes_user_id ON micro_post_likes(user_id);
 ```
 
 ---

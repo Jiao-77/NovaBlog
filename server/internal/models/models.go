@@ -55,32 +55,10 @@ type LikeCount struct {
 
 // PostMeta 文章元数据（可选，用于存储文章额外信息）
 type PostMeta struct {
-	ID         uint      `json:"id" gorm:"primaryKey"`
-	PostID     string    `json:"post_id" gorm:"uniqueIndex;size:100;not null"`
-	ViewCount  int       `json:"view_count" gorm:"default:0"`
-	LikeCount  int       `json:"like_count" gorm:"default:0"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
-}
-
-// MicroPost 微语模型
-type MicroPost struct {
-	ID        uint           `json:"id" gorm:"primaryKey"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
-	UserID    uint           `json:"user_id" gorm:"index;not null"`
-	Content   string         `json:"content" gorm:"type:text;not null"`
-	Images    string         `json:"images" gorm:"type:text"`                 // JSON 数组存储图片 URL
-	Tags      string         `json:"tags" gorm:"type:text"`                   // JSON 数组存储标签
-	IsPublic  bool           `json:"is_public" gorm:"default:true"`           // 是否公开
-	User      User           `json:"user" gorm:"foreignKey:UserID"`
-}
-
-// MicroPostLike 微语点赞
-type MicroPostLike struct {
-	ID          uint      `json:"id" gorm:"primaryKey"`
-	CreatedAt   time.Time `json:"created_at"`
-	MicroPostID uint      `json:"micro_post_id" gorm:"uniqueIndex:idx_micropost_user;not null"`
-	UserID      uint      `json:"user_id" gorm:"uniqueIndex:idx_micropost_user;not null"`
+	ID        uint      `json:"id" gorm:"primaryKey"`
+	PostID    string    `json:"post_id" gorm:"uniqueIndex;size:100;not null"`
+	ViewCount int       `json:"view_count" gorm:"default:0"`
+	LikeCount int       `json:"like_count" gorm:"default:0"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

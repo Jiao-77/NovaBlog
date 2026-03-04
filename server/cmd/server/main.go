@@ -33,7 +33,6 @@ func main() {
 	authHandler := handlers.NewAuthHandler(jwtManager)
 	commentHandler := handlers.NewCommentHandler()
 	likeHandler := handlers.NewLikeHandler()
-	microHandler := handlers.NewMicroHandler()
 
 	// 创建路由
 	r := gin.New()
@@ -55,7 +54,7 @@ func main() {
 	// 健康检查
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"status": "ok",
+			"status":  "ok",
 			"message": "NovaBlog API is running",
 		})
 	})
@@ -71,12 +70,6 @@ func main() {
 		api.GET("/likes", likeHandler.GetLikeStatus)
 		api.POST("/likes", likeHandler.ToggleLike) // 允许访客点赞（基于 IP Hash）
 
-		// 微语公开接口
-		api.GET("/micros", microHandler.GetMicros)
-		api.GET("/micros/stats", microHandler.GetStats)
-		api.GET("/micros/heatmap", microHandler.GetHeatmap)
-		api.GET("/micros/:id", microHandler.GetMicro)
-
 		// 需要认证的接口
 		authGroup := api.Group("")
 		authGroup.Use(middleware.AuthMiddleware(jwtManager))
@@ -88,12 +81,6 @@ func main() {
 			// 评论相关（需要登录才能评论）
 			authGroup.POST("/comments", commentHandler.CreateComment)
 			authGroup.DELETE("/comments/:id", commentHandler.DeleteComment)
-
-			// 微语相关（需要登录）
-			authGroup.POST("/micros", microHandler.CreateMicro)
-			authGroup.PUT("/micros/:id", microHandler.UpdateMicro)
-			authGroup.DELETE("/micros/:id", microHandler.DeleteMicro)
-			authGroup.POST("/micros/:id/like", microHandler.ToggleLike)
 		}
 
 		// 管理员接口
