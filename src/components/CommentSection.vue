@@ -345,7 +345,7 @@ const props = defineProps<{
 
 const apiBaseUrl = props.apiBaseUrl || 'http://localhost:8080/api';
 const imageUploadUrl = props.imageUploadUrl || 'https://picturebed.jiao77.cn/api/index.php';
-const imageUploadToken = props.imageUploadToken || 'jiao77';
+const imageUploadToken = props.imageUploadToken || 'blog';
 
 // 状态
 const comments = ref<any[]>([]);
