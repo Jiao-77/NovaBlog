@@ -33,6 +33,7 @@ func main() {
 	authHandler := handlers.NewAuthHandler(jwtManager)
 	commentHandler := handlers.NewCommentHandler()
 	likeHandler := handlers.NewLikeHandler()
+	microHandler := handlers.NewMicroHandler()
 
 	// 创建路由
 	r := gin.New()
@@ -70,6 +71,15 @@ func main() {
 		api.GET("/likes", likeHandler.GetLikeStatus)
 		api.POST("/likes", likeHandler.ToggleLike) // 允许访客点赞（基于 IP Hash）
 
+		// 微语公开接口
+		api.GET("/micro", microHandler.GetMicros)
+		api.GET("/micro/stats", microHandler.GetMicroStats)
+		api.GET("/micro/heatmap", microHandler.GetMicroHeatmap)
+		api.GET("/micro/tags", microHandler.GetMicroTags)
+		api.GET("/micro/:id", microHandler.GetMicro)
+		api.POST("/micro/:id/like", microHandler.ToggleMicroLike) // 允许访客点赞
+		api.GET("/micro-comments", microHandler.GetMicroComments) // 获取微语评论
+
 		// 需要认证的接口
 		authGroup := api.Group("")
 		authGroup.Use(middleware.AuthMiddleware(jwtManager))
@@ -81,6 +91,14 @@ func main() {
 			// 评论相关（需要登录才能评论）
 			authGroup.POST("/comments", commentHandler.CreateComment)
 			authGroup.DELETE("/comments/:id", commentHandler.DeleteComment)
+
+			// 微语相关（需要登录才能发布和删除）
+			authGroup.POST("/micro", microHandler.CreateMicro)
+			authGroup.DELETE("/micro/:id", microHandler.DeleteMicro)
+
+			// 微语评论相关
+			authGroup.POST("/micro-comments", microHandler.CreateMicroComment)
+			authGroup.DELETE("/micro-comments/:id", microHandler.DeleteMicroComment)
 		}
 
 		// 管理员接口

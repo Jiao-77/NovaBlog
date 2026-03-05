@@ -62,3 +62,41 @@ type PostMeta struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+// Micro 微语模型
+type Micro struct {
+	ID           uint           `json:"id" gorm:"primaryKey"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
+	UserID       uint           `json:"user_id" gorm:"index;not null"`
+	Content      string         `json:"content" gorm:"type:text;not null"`
+	Images       string         `json:"images" gorm:"type:text"` // JSON array of image URLs
+	Tags         string         `json:"tags" gorm:"type:text"`   // JSON array of tags
+	LikeCount    int            `json:"like_count" gorm:"default:0"`
+	CommentCount int            `json:"comment_count" gorm:"default:0"`
+	User         User           `json:"user" gorm:"foreignKey:UserID"`
+}
+
+// MicroLike 微语点赞模型
+type MicroLike struct {
+	ID        uint      `json:"id" gorm:"primaryKey"`
+	CreatedAt time.Time `json:"created_at"`
+	MicroID   uint      `json:"micro_id" gorm:"uniqueIndex:idx_micro_user;not null"`
+	UserID    *uint     `json:"user_id" gorm:"uniqueIndex:idx_micro_user;index"`
+	IPHash    string    `json:"-" gorm:"uniqueIndex:idx_micro_ip;size:64"`
+}
+
+// MicroComment 微语评论模型
+type MicroComment struct {
+	ID        uint           `json:"id" gorm:"primaryKey"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	MicroID   uint           `json:"micro_id" gorm:"index;not null"`
+	UserID    uint           `json:"user_id" gorm:"index;not null"`
+	ParentID  *uint          `json:"parent_id" gorm:"index"`
+	Content   string         `json:"content" gorm:"type:text;not null"`
+	User      User           `json:"user" gorm:"foreignKey:UserID"`
+	Replies   []MicroComment `json:"replies,omitempty" gorm:"foreignKey:ParentID"`
+}
