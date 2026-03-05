@@ -22,19 +22,6 @@ const blogCollection = defineCollection({
   }),
 });
 
-// 页面集合 (如关于页面等)
-const pagesCollection = defineCollection({
-  type: 'content',
-  schema: z.object({
-    title: z.string(),
-    description: z.string().optional(),
-    layout: z.string().optional(),
-    showInNav: z.boolean().default(false),
-    order: z.number().default(0),
-  }),
-});
-
 export const collections = {
   blog: blogCollection,
-  pages: pagesCollection,
 };

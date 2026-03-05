@@ -1,7 +1,7 @@
 <template>
   <div class="comment-section">
     <h3 class="text-xl font-bold mb-6">评论</h3>
-    
+
     <!-- 评论输入框 -->
     <div v-if="isLoggedIn" class="mb-8">
       <textarea
@@ -10,7 +10,63 @@
         class="w-full p-4 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
         rows="4"
       ></textarea>
-      <div class="flex justify-end mt-2">
+      <!-- 工具栏 -->
+      <div class="flex justify-between items-center mt-2">
+        <div class="flex items-center gap-2">
+          <!-- Emoji 按钮 -->
+          <div class="relative emoji-picker-container">
+            <button
+              @click.stop="showEmojiPicker = !showEmojiPicker"
+              class="flex items-center gap-1 px-3 py-1.5 text-sm text-foreground/60 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors"
+              title="添加表情"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>表情</span>
+            </button>
+            <!-- Emoji 选择面板 -->
+            <div
+              v-if="showEmojiPicker"
+              class="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 border border-border rounded-lg shadow-lg p-3 z-20 w-72"
+              @click.stop
+            >
+              <div class="flex flex-wrap gap-1">
+                <button
+                  v-for="emoji in commonEmojis"
+                  :key="emoji"
+                  @click="insertEmoji(emoji)"
+                  class="w-8 h-8 flex items-center justify-center text-xl hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                >
+                  {{ emoji }}
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- 图片上传按钮 -->
+          <button
+            @click="triggerImageUpload"
+            :disabled="uploadingImage"
+            class="flex items-center gap-1 px-3 py-1.5 text-sm text-foreground/60 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors disabled:opacity-50"
+            title="上传图片"
+          >
+            <svg v-if="!uploadingImage" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <svg v-else class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>{{ uploadingImage ? '上传中...' : '图片' }}</span>
+          </button>
+          <input
+            ref="imageInput"
+            type="file"
+            accept="image/*"
+            class="hidden"
+            @change="handleImageUpload"
+          />
+        </div>
         <button
           @click="submitComment"
           :disabled="!newComment.trim() || submitting"
@@ -19,6 +75,8 @@
           {{ submitting ? '发布中...' : '发布评论' }}
         </button>
       </div>
+      <!-- 上传错误提示 -->
+      <p v-if="uploadError" class="text-sm text-red-500 mt-1">{{ uploadError }}</p>
     </div>
     
     <!-- 未登录提示 -->
@@ -56,7 +114,7 @@
               <span class="font-medium">{{ getDisplayName(comment.user) }}</span>
               <span class="text-xs text-foreground/40">{{ formatDate(comment.created_at) }}</span>
             </div>
-            <div class="comment-content prose prose-sm dark:prose-invert max-w-none" v-html="renderMarkdown(comment.content)"></div>
+            <div class="comment-content prose prose-sm dark:prose-invert max-w-none" v-html="renderMarkdown(comment.content)" @click="handleContentClick"></div>
             
             <!-- 回复按钮 -->
             <button
@@ -76,15 +134,72 @@
             class="w-full p-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none text-sm"
             rows="3"
           ></textarea>
-          <div class="flex justify-end gap-2 mt-2">
-            <button @click="replyTo = null" class="btn-secondary text-sm">取消</button>
-            <button
-              @click="submitReply(comment.id)"
-              :disabled="!replyContent.trim() || submitting"
-              class="btn-primary text-sm disabled:opacity-50"
-            >
-              回复
-            </button>
+          <div class="flex justify-between items-center mt-2">
+            <div class="flex items-center gap-2">
+              <!-- Emoji 按钮 -->
+              <div class="relative emoji-picker-container">
+                <button
+                  @click.stop="showReplyEmojiPicker = showReplyEmojiPicker === comment.id ? null : comment.id"
+                  class="flex items-center gap-1 px-2 py-1 text-xs text-foreground/60 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors"
+                  title="添加表情"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>表情</span>
+                </button>
+                <!-- Emoji 选择面板 -->
+                <div
+                  v-if="showReplyEmojiPicker === comment.id"
+                  class="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 border border-border rounded-lg shadow-lg p-3 z-20 w-64"
+                  @click.stop
+                >
+                  <div class="flex flex-wrap gap-1">
+                    <button
+                      v-for="emoji in commonEmojis"
+                      :key="emoji"
+                      @click="insertReplyEmoji(emoji, comment.id)"
+                      class="w-7 h-7 flex items-center justify-center text-lg hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                    >
+                      {{ emoji }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <!-- 图片上传按钮 -->
+              <button
+                @click="triggerReplyImageUpload(comment.id)"
+                :disabled="uploadingReplyImage"
+                class="flex items-center gap-1 px-2 py-1 text-xs text-foreground/60 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors disabled:opacity-50"
+                title="上传图片"
+              >
+                <svg v-if="!uploadingReplyImage" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <svg v-else class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>{{ uploadingReplyImage ? '上传中...' : '图片' }}</span>
+              </button>
+              <input
+                :ref="el => replyImageInputs[comment.id] = el as HTMLInputElement"
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="(e) => handleReplyImageUpload(e, comment.id)"
+              />
+            </div>
+            <div class="flex gap-2">
+              <button @click="replyTo = null; showReplyEmojiPicker = null" class="btn-secondary text-sm">取消</button>
+              <button
+                @click="submitReply(comment.id)"
+                :disabled="!replyContent.trim() || submitting"
+                class="btn-primary text-sm disabled:opacity-50"
+              >
+                回复
+              </button>
+            </div>
           </div>
         </div>
         
@@ -103,7 +218,7 @@
                 <span class="font-medium text-sm">{{ getDisplayName(reply.user) }}</span>
                 <span class="text-xs text-foreground/40">{{ formatDate(reply.created_at) }}</span>
               </div>
-              <div class="comment-content prose prose-sm dark:prose-invert max-w-none text-sm" v-html="renderMarkdown(reply.content)"></div>
+              <div class="comment-content prose prose-sm dark:prose-invert max-w-none text-sm" v-html="renderMarkdown(reply.content)" @click="handleContentClick"></div>
             </div>
           </div>
         </div>
@@ -130,11 +245,89 @@
         下一页
       </button>
     </div>
+
+    <!-- 图片预览模态框（灯箱） -->
+    <Teleport to="body">
+      <Transition name="lightbox">
+        <div
+          v-if="previewImage"
+          class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm select-none"
+          @click="closePreview"
+          @wheel.prevent="handleWheel"
+        >
+          <!-- 关闭按钮 -->
+          <button
+            class="absolute top-4 right-4 z-10 p-2 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all"
+            @click="closePreview"
+            aria-label="关闭预览"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          <!-- 缩放控制按钮 -->
+          <div class="absolute top-4 left-4 z-10 flex gap-2">
+            <button
+              class="p-2 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all"
+              @click.stop="zoomOut"
+              :disabled="imageScale <= 0.5"
+              :class="{ 'opacity-50 cursor-not-allowed': imageScale <= 0.5 }"
+              aria-label="缩小"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+              </svg>
+            </button>
+            <button
+              class="px-3 py-2 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all text-sm min-w-[60px]"
+              @click.stop="resetZoom"
+              aria-label="重置缩放"
+            >
+              {{ Math.round(imageScale * 100) }}%
+            </button>
+            <button
+              class="p-2 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all"
+              @click.stop="zoomIn"
+              :disabled="imageScale >= 3"
+              :class="{ 'opacity-50 cursor-not-allowed': imageScale >= 3 }"
+              aria-label="放大"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+              </svg>
+            </button>
+          </div>
+          
+          <!-- 图片容器 -->
+          <div
+            class="relative overflow-hidden"
+            @click.stop
+            @mousedown="startDrag"
+          >
+            <img
+              ref="previewImgRef"
+              :src="previewImage"
+              class="rounded-lg shadow-2xl transition-transform duration-100"
+              :style="imageStyle"
+              @click.stop
+              @dragstart.prevent
+              alt="图片预览"
+            />
+          </div>
+          
+          <!-- 提示文字 -->
+          <p class="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-sm">
+            滚轮缩放 · 拖拽移动 · ESC 或点击背景关闭
+          </p>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { marked } from 'marked';
 
 // 配置 marked 选项 - 安全模式，禁止 HTML 标签
@@ -146,9 +339,13 @@ marked.setOptions({
 const props = defineProps<{
   postId: string;
   apiBaseUrl?: string;
+  imageUploadUrl?: string;
+  imageUploadToken?: string;
 }>();
 
 const apiBaseUrl = props.apiBaseUrl || 'http://localhost:8080/api';
+const imageUploadUrl = props.imageUploadUrl || 'https://picturebed.jiao77.cn/api/index.php';
+const imageUploadToken = props.imageUploadToken || 'jiao77';
 
 // 状态
 const comments = ref<any[]>([]);
@@ -164,11 +361,52 @@ const pagination = ref({
   totalPage: 0,
 });
 
+// 图片上传相关状态
+const imageInput = ref<HTMLInputElement | null>(null);
+const uploadingImage = ref(false);
+const uploadError = ref('');
+const previewImage = ref<string | null>(null);
+
+// 回复图片上传相关状态
+const replyImageInputs = ref<Record<number, HTMLInputElement>>({});
+const uploadingReplyImage = ref(false);
+
+// Emoji 选择器状态
+const showEmojiPicker = ref(false);
+const showReplyEmojiPicker = ref<number | null>(null);
+
+// 常用 emoji 列表
+const commonEmojis = [
+  '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂',
+  '😉', '😌', '😍', '🥰', '😘', '😋', '😛', '😜', '🤪', '😝',
+  '🤗', '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😏', '😒',
+  '🙄', '😬', '😮', '🥱', '😴', '🤤', '😷', '🤒', '🤕', '🤢',
+  '👍', '👎', '👏', '🙌', '🤝', '🙏', '💪', '🎉', '🎊', '💯',
+  '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '💔', '❣️', '💕',
+  '🔥', '⭐', '🌟', '✨', '💫', '🎯', '🏆', '🚀', '💡', '📌',
+];
+
+// 灯箱缩放和拖拽状态
+const previewImgRef = ref<HTMLImageElement | null>(null);
+const imageScale = ref(1);
+const imageTranslate = ref({ x: 0, y: 0 });
+const isDragging = ref(false);
+const dragStart = ref({ x: 0, y: 0 });
+const dragOffset = ref({ x: 0, y: 0 });
+
 // 计算属性 - 仅在浏览器环境中访问 localStorage
 const isLoggedIn = computed(() => {
   if (typeof window === 'undefined') return false;
   return !!localStorage.getItem('token');
 });
+
+// 图片样式计算属性
+const imageStyle = computed(() => ({
+  transform: `translate(${imageTranslate.value.x}px, ${imageTranslate.value.y}px) scale(${imageScale.value})`,
+  cursor: isDragging.value ? 'grabbing' : 'grab',
+  maxWidth: '90vw',
+  maxHeight: '90vh',
+}));
 
 // 获取认证头
 function getAuthHeaders(): Record<string, string> {
@@ -271,6 +509,161 @@ function loadPage(page: number) {
   loadComments();
 }
 
+// 触发图片上传
+function triggerImageUpload() {
+  if (imageInput.value) {
+    imageInput.value.click();
+  }
+}
+
+// 处理图片上传
+async function handleImageUpload(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  // 验证文件类型
+  if (!file.type.startsWith('image/')) {
+    uploadError.value = '请选择图片文件';
+    return;
+  }
+
+  // 验证文件大小 (最大 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    uploadError.value = '图片大小不能超过 5MB';
+    return;
+  }
+
+  uploadError.value = '';
+  uploadingImage.value = true;
+
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('token', imageUploadToken);
+
+    const response = await fetch(imageUploadUrl, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (data.result === 'success' && data.url) {
+      // 插入 Markdown 图片语法到评论内容
+      const imageName = data.srcName || file.name.replace(/\.[^/.]+$/, '');
+      const markdown = `![${imageName}](${data.url})`;
+
+      // 在光标位置插入或追加到末尾
+      const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+      if (textarea) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = newComment.value;
+        newComment.value = text.substring(0, start) + markdown + text.substring(end);
+        // 恢复焦点
+        textarea.focus();
+        textarea.setSelectionRange(start + markdown.length, start + markdown.length);
+      } else {
+        newComment.value += markdown;
+      }
+    } else {
+      uploadError.value = data.message || '上传失败，请稍后重试';
+    }
+  } catch (error) {
+    console.error('Failed to upload image:', error);
+    uploadError.value = '上传失败，请检查网络连接';
+  } finally {
+    uploadingImage.value = false;
+    // 清空 input 以便重复选择同一文件
+    if (target) {
+      target.value = '';
+    }
+  }
+}
+
+// 插入 emoji 到评论
+function insertEmoji(emoji: string) {
+  const textarea = document.querySelector('.comment-section textarea') as HTMLTextAreaElement;
+  if (textarea) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = newComment.value;
+    newComment.value = text.substring(0, start) + emoji + text.substring(end);
+    showEmojiPicker.value = false;
+    // 恢复焦点
+    textarea.focus();
+    textarea.setSelectionRange(start + emoji.length, start + emoji.length);
+  } else {
+    newComment.value += emoji;
+    showEmojiPicker.value = false;
+  }
+}
+
+// 插入 emoji 到回复
+function insertReplyEmoji(emoji: string, commentId: number) {
+  replyContent.value += emoji;
+  showReplyEmojiPicker.value = null;
+}
+
+// 触发回复图片上传
+function triggerReplyImageUpload(commentId: number) {
+  const input = replyImageInputs.value[commentId];
+  if (input) {
+    input.click();
+  }
+}
+
+// 处理回复图片上传
+async function handleReplyImageUpload(event: Event, commentId: number) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  // 验证文件类型
+  if (!file.type.startsWith('image/')) {
+    alert('请选择图片文件');
+    return;
+  }
+
+  // 验证文件大小 (最大 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('图片大小不能超过 5MB');
+    return;
+  }
+
+  uploadingReplyImage.value = true;
+
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('token', imageUploadToken);
+
+    const response = await fetch(imageUploadUrl, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (data.result === 'success' && data.url) {
+      const imageName = data.srcName || file.name.replace(/\.[^/.]+$/, '');
+      const markdown = `![${imageName}](${data.url})`;
+      replyContent.value += markdown;
+    } else {
+      alert(data.message || '上传失败，请稍后重试');
+    }
+  } catch (error) {
+    console.error('Failed to upload image:', error);
+    alert('上传失败，请检查网络连接');
+  } finally {
+    uploadingReplyImage.value = false;
+    if (target) {
+      target.value = '';
+    }
+  }
+}
+
 // 获取用户首字母
 function getInitial(user: any): string {
   if (!user) return '?';
@@ -318,8 +711,142 @@ function renderMarkdown(content: string): string {
   }
 }
 
+// 处理评论区域点击事件（事件委托）
+function handleContentClick(event: MouseEvent) {
+  const target = event.target as HTMLElement;
+  if (target.tagName === 'IMG') {
+    const img = target as HTMLImageElement;
+    previewImage.value = img.src;
+  }
+}
+
+// 关闭图片预览
+function closePreview() {
+  previewImage.value = null;
+  // 重置缩放和位置
+  imageScale.value = 1;
+  imageTranslate.value = { x: 0, y: 0 };
+}
+
+// 放大
+function zoomIn() {
+  if (imageScale.value < 3) {
+    imageScale.value = Math.min(3, imageScale.value + 0.25);
+  }
+}
+
+// 缩小
+function zoomOut() {
+  if (imageScale.value > 0.5) {
+    imageScale.value = Math.max(0.5, imageScale.value - 0.25);
+    // 缩小时限制图片不超出边界
+    limitTranslate();
+  }
+}
+
+// 重置缩放
+function resetZoom() {
+  imageScale.value = 1;
+  imageTranslate.value = { x: 0, y: 0 };
+}
+
+// 滚轮缩放
+function handleWheel(event: WheelEvent) {
+  if (!previewImage.value) return;
+  
+  const delta = event.deltaY > 0 ? -0.1 : 0.1;
+  const newScale = Math.max(0.5, Math.min(3, imageScale.value + delta));
+  
+  if (newScale !== imageScale.value) {
+    imageScale.value = newScale;
+    if (newScale < 1) {
+      limitTranslate();
+    }
+  }
+}
+
+// 开始拖拽
+function startDrag(event: MouseEvent) {
+  if (imageScale.value <= 1) return;
+  
+  isDragging.value = true;
+  dragStart.value = { x: event.clientX, y: event.clientY };
+  dragOffset.value = { ...imageTranslate.value };
+  
+  document.addEventListener('mousemove', handleDrag);
+  document.addEventListener('mouseup', stopDrag);
+}
+
+// 拖拽中
+function handleDrag(event: MouseEvent) {
+  if (!isDragging.value) return;
+  
+  const dx = event.clientX - dragStart.value.x;
+  const dy = event.clientY - dragStart.value.y;
+  
+  imageTranslate.value = {
+    x: dragOffset.value.x + dx,
+    y: dragOffset.value.y + dy,
+  };
+}
+
+// 停止拖拽
+function stopDrag() {
+  isDragging.value = false;
+  document.removeEventListener('mousemove', handleDrag);
+  document.removeEventListener('mouseup', stopDrag);
+  limitTranslate();
+}
+
+// 限制拖拽范围
+function limitTranslate() {
+  if (!previewImgRef.value) return;
+  
+  const img = previewImgRef.value;
+  const maxOffsetX = (img.naturalWidth * imageScale.value - window.innerWidth * 0.9) / 2;
+  const maxOffsetY = (img.naturalHeight * imageScale.value - window.innerHeight * 0.9) / 2;
+  
+  imageTranslate.value = {
+    x: Math.max(-maxOffsetX, Math.min(maxOffsetX, imageTranslate.value.x)),
+    y: Math.max(-maxOffsetY, Math.min(maxOffsetY, imageTranslate.value.y)),
+  };
+  
+  // 如果图片比视口小，不允许移动
+  if (img.naturalWidth * imageScale.value <= window.innerWidth * 0.9) {
+    imageTranslate.value.x = 0;
+  }
+  if (img.naturalHeight * imageScale.value <= window.innerHeight * 0.9) {
+    imageTranslate.value.y = 0;
+  }
+}
+
+// 处理键盘事件
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && previewImage.value) {
+    previewImage.value = null;
+  }
+}
+
 onMounted(() => {
   loadComments();
+  // 监听键盘事件
+  window.addEventListener('keydown', handleKeydown);
+  // 点击外部关闭 emoji 选择器
+  document.addEventListener('click', closeEmojiPickers);
+});
+
+// 关闭所有 emoji 选择器
+function closeEmojiPickers(event: MouseEvent) {
+  const target = event.target as HTMLElement;
+  if (!target.closest('.emoji-picker-container')) {
+    showEmojiPicker.value = false;
+    showReplyEmojiPicker.value = null;
+  }
+}
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown);
+  document.removeEventListener('click', closeEmojiPickers);
 });
 </script>
 
@@ -410,7 +937,9 @@ onMounted(() => {
 }
 
 .comment-content :deep(img) {
-  @apply max-w-full rounded-lg my-2;
+  @apply max-w-full rounded-lg my-2 cursor-pointer hover:opacity-90 transition-opacity;
+  max-height: 400px;
+  object-fit: contain;
 }
 
 .comment-content :deep(table) {
@@ -424,5 +953,26 @@ onMounted(() => {
 
 .comment-content :deep(th) {
   @apply bg-gray-100 dark:bg-gray-800 font-bold;
+}
+
+/* 灯箱过渡动画 */
+.lightbox-enter-active,
+.lightbox-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.lightbox-enter-active img,
+.lightbox-leave-active img {
+  transition: transform 0.3s ease;
+}
+
+.lightbox-enter-from,
+.lightbox-leave-to {
+  opacity: 0;
+}
+
+.lightbox-enter-from img,
+.lightbox-leave-to img {
+  transform: scale(0.9);
 }
 </style>
