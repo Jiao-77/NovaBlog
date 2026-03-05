@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MicroFeed from '../components/MicroFeed.vue';
+import MicroSidebar from '../components/MicroSidebar.vue';
+
+// API 基础 URL
+const API_BASE = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8080';
+---
+
+<BaseLayout title="微语 - NovaBlog" description="分享生活点滴，记录灵感瞬间">
+  <div class="content-width py-8">
+    <!-- 页面标题 -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold mb-2">微语</h1>
+      <p class="text-foreground/60">分享生活点滴，记录灵感瞬间</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- 左侧：发布框和动态列表 -->
+      <div class="lg:col-span-2">
+        <MicroFeed
+          client:load
+          apiBaseUrl={`${API_BASE}/api`}
+          onPublished="handlePublished"
+        />
+      </div>
+
+      <!-- 右侧：热力图和统计 -->
+      <MicroSidebar
+        client:load
+        apiBaseUrl={`${API_BASE}/api`}
+        ref="sidebarRef"
+      />
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  // 通过自定义事件实现组件间通信
+  window.addEventListener('micro-published', () => {
+    // 触发侧边栏刷新
+    window.dispatchEvent(new CustomEvent('refresh-sidebar'));
+  });
+</script>

@@ -54,6 +54,9 @@ func autoMigrate() error {
 		&models.Like{},
 		&models.LikeCount{},
 		&models.PostMeta{},
+		&models.Micro{},
+		&models.MicroLike{},
+		&models.MicroComment{},
 	)
 }
 
